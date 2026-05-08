@@ -1,201 +1,211 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { postDisplayPreferences, postUserPreferences } from '../util/data';
-import Fuse from 'fuse.js';
-import { Input } from '@headlessui/react';
-import LocationItemGrid from '../components/locationGrid'
-import { useAuth } from '../context/AuthProvider';
-import AuthPopup from '../components/AuthPopup';
-import { getCurrentTimeOfDayWithLocations, getDailyLocationOperationTimes } from '../util/helper';
-import { DailyItem, Item } from '../types/ItemTypes';
-import ErrorPopup from '../components/error-popup';
-import { useDataStore } from '@/store';
+import React, { useState, useEffect, useMemo, useRef } from "react"
+import { postDisplayPreferences, postUserPreferences } from "../util/data"
+import Fuse from "fuse.js"
+import LocationItemGrid from "../components/locationGrid"
+import { useAuth } from "../context/AuthProvider"
+import AuthPopup from "../components/AuthPopup"
+import {
+  getCurrentTimeOfDayWithLocations,
+  getDailyItemsForDate,
+  getDailyLocationOperationTimes,
+} from "../util/helper"
+import { DailyItem, Item } from "../types/ItemTypes"
+import ErrorPopup from "../components/error-popup"
+import { useDataStore } from "@/store"
 import { HeaderControls } from "../components/header-controls"
-import SEO from '../components/SEO';
+import SEO from "../components/SEO"
+import { HomeFilterChips } from "@/components/dining/HomeFilterChips"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
-const DEFAULT_LOCATIONS = ["Sargent", "Elder", "Allison", "Plex East", "Plex West"];
+const DEFAULT_LOCATIONS = ["Sargent", "Elder", "Allison", "Plex East", "Plex West"]
 
 const DailyItems: React.FC = () => {
-  // Data involved with auth
-  const [showPopup, setShowPopup] = useState(false);
-  const { token, authLoading } = useAuth();
+  const [showPopup, setShowPopup] = useState(false)
+  const { token, authLoading } = useAuth()
 
-  // Data involved with display of items
-  const locations = DEFAULT_LOCATIONS;
-  const [visibleLocations, setVisibleLocations] = useState<string[]>(DEFAULT_LOCATIONS);
-  const [visibleTimes, setVisibleTimes] = useState<string[]>([]);
-  const [expandFolders, setExpandFolders] = useState(false);
-  const timesOfDay = ["Breakfast", "Lunch", "Dinner"];
-  const [showPreferences, setShowPreferences] = useState(false);
-  const [availableFavorites, setAvailableFavorites] = useState<DailyItem[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const locations = DEFAULT_LOCATIONS
+  const [visibleLocations, setVisibleLocations] = useState<string[]>(DEFAULT_LOCATIONS)
+  const [visibleTimes, setVisibleTimes] = useState<string[]>(["Breakfast", "Lunch", "Dinner"])
+  const [expandFolders, setExpandFolders] = useState(false)
+  const timesOfDay = ["Breakfast", "Lunch", "Dinner"]
+  const [showPreferences, setShowPreferences] = useState(false)
+  const [availableFavorites, setAvailableFavorites] = useState<DailyItem[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [openLocations, setOpenLocations] = useState<string[]>([])
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const hasHydratedSignedInDisplayPrefs = useRef(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false)
+  const [filterOpenNow, setFilterOpenNow] = useState(false)
+  const hasHydratedSignedInDisplayPrefs = useRef(false)
 
-  // Data involved with API
-  const staticData = useDataStore((state) => state.UserDataResponse);
-  const weeklyItems = staticData.weeklyItems;
+  const staticData = useDataStore((state) => state.UserDataResponse)
+  const menuDataUpdatedAt = useDataStore((state) => state.menuDataUpdatedAt)
+  const weeklyItems = staticData.weeklyItems
   const memoizedLocationHours = useMemo(
-    () => getDailyLocationOperationTimes(staticData.locationOperationHours, new Date()),
+    () => getDailyLocationOperationTimes(staticData.locationOperationHours, selectedDate),
     [staticData.locationOperationHours, selectedDate]
-  );
-  const userPreferences = staticData.userPreferences;
-  const displayPreferences = staticData.displayPreferences;
+  )
+  const userPreferences = staticData.userPreferences
+  const displayPreferences = staticData.displayPreferences
   const setUserPreferences = useDataStore((state) => state.setUserPreferences)
-  const [dailyItems, setDailyItems] = useState<DailyItem[]>([]);
+  const [dailyItems, setDailyItems] = useState<DailyItem[]>([])
+
   useEffect(() => {
     if (!authLoading && !token) {
-      setShowPreferences(sessionStorage.getItem("showPreferences") !== "false");
-      setVisibleLocations(DEFAULT_LOCATIONS);
-      hasHydratedSignedInDisplayPrefs.current = false;
+      setVisibleLocations(DEFAULT_LOCATIONS)
+      hasHydratedSignedInDisplayPrefs.current = false
     }
-  }, [authLoading, token]);
+  }, [authLoading, token])
 
   useEffect(() => {
     if (!token || !displayPreferences || hasHydratedSignedInDisplayPrefs.current) {
-      return;
+      return
     }
 
     if (displayPreferences.hasSavedDisplayPreferences) {
-      setVisibleLocations(displayPreferences.visibleLocations);
-      setShowPreferences(false);
+      setVisibleLocations(displayPreferences.visibleLocations)
     } else {
-      setVisibleLocations(DEFAULT_LOCATIONS);
-      setShowPreferences(true);
+      setVisibleLocations(DEFAULT_LOCATIONS)
     }
 
-    hasHydratedSignedInDisplayPrefs.current = true;
-  }, [token, displayPreferences]);
+    hasHydratedSignedInDisplayPrefs.current = true
+  }, [token, displayPreferences])
 
-  // Data involved with fuse
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredItems, setFilteredItems] = useState<DailyItem[]>([]);
-  const fuse = new Fuse(dailyItems, { keys: ['Name'], threshold: 0.5 });
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filteredItems, setFilteredItems] = useState<DailyItem[]>([])
+  const fuse = useMemo(() => new Fuse(dailyItems, { keys: ["Name"], threshold: 0.5 }), [dailyItems])
 
-
-
-  // Initialize selected times based on current time
   useEffect(() => {
-    if (memoizedLocationHours) {
-      const { timeOfDay, openLocations } = getCurrentTimeOfDayWithLocations(memoizedLocationHours);
+    if (memoizedLocationHours && Object.keys(memoizedLocationHours).length > 0) {
+      const { timeOfDay, openLocations: open } = getCurrentTimeOfDayWithLocations(memoizedLocationHours)
       if (timeOfDay) {
-        setVisibleTimes([timeOfDay]);
+        setVisibleTimes([timeOfDay])
+      } else {
+        setVisibleTimes(["Breakfast", "Lunch", "Dinner"])
       }
 
-      if (openLocations) {
-        setOpenLocations(openLocations)
+      if (open) {
+        setOpenLocations(open)
       }
     }
-  }, [memoizedLocationHours]);
+  }, [memoizedLocationHours])
 
   useEffect(() => {
     if (weeklyItems && Object.keys(weeklyItems).length != 0) {
-      const todaysItems = weeklyItems[new Date().toISOString().split("T")[0]] || []
-      setDailyItems(todaysItems);
-      // Determine if there is some location that is open, but no items are available
-      // If this is the case then there was an error in scraping data and we should display
-      // an error message popup to the user
-      setShowErrorPopup(!todaysItems && memoizedLocationHours);
+      const todaysItems = getDailyItemsForDate(weeklyItems, selectedDate)
+      setDailyItems(todaysItems)
+      setShowErrorPopup(!todaysItems?.length && !!memoizedLocationHours)
     }
-  }, [weeklyItems])
+  }, [weeklyItems, memoizedLocationHours, selectedDate])
 
   useEffect(() => {
-    // Set available favorites based on items that match user preferences
     if (userPreferences && userPreferences.length > 0) {
-      const userPrefNames = new Set(userPreferences);
-      const favorites = dailyItems.filter(item => userPrefNames.has(item.Name));
-      setAvailableFavorites(favorites);
+      const userPrefNames = new Set(userPreferences)
+      const favorites = dailyItems.filter((item) => userPrefNames.has(item.Name))
+      setAvailableFavorites(favorites)
     } else {
-      // Clear favorites when user preferences are empty/null (e.g., on sign out)
-      setAvailableFavorites([]);
+      setAvailableFavorites([])
     }
-  }, [dailyItems, userPreferences]);
+  }, [dailyItems, userPreferences])
 
   useEffect(() => {
     if (searchQuery) {
-      const result = fuse.search(searchQuery).map(({ item }) => item);
-      setFilteredItems(result);
+      const result = fuse.search(searchQuery).map(({ item }) => item)
+      setFilteredItems(result)
     } else {
-      setFilteredItems(dailyItems);
+      setFilteredItems(dailyItems)
     }
-  }, [searchQuery, dailyItems]);
+  }, [searchQuery, dailyItems, fuse])
+
+  const displayedLocations = useMemo(() => {
+    if (!filterOpenNow) {
+      return visibleLocations
+    }
+    return visibleLocations.filter((loc) => openLocations.includes(loc))
+  }, [visibleLocations, filterOpenNow, openLocations])
 
   const handleItemClick = (item: Item) => {
     if (!token) {
-      setShowPopup(true);
-      return;
+      setShowPopup(true)
+      return
     }
 
-    let tempPreferences = userPreferences;
-    let tempAvailable = availableFavorites;
-    const formattedItemName = item.Name.toLowerCase().trim();
-
+    let tempPreferences = userPreferences
+    let tempAvailable = availableFavorites
+    const formattedItemName = item.Name.toLowerCase().trim()
 
     if (userPreferences) {
-      if (userPreferences.some(i => i.toLowerCase().trim() === formattedItemName)) {
-        tempPreferences = userPreferences.filter(i => i.toLowerCase().trim() !== formattedItemName);
+      if (userPreferences.some((i) => i.toLowerCase().trim() === formattedItemName)) {
+        tempPreferences = userPreferences.filter((i) => i.toLowerCase().trim() !== formattedItemName)
       } else {
-        tempPreferences = [...userPreferences, item.Name];
+        tempPreferences = [...userPreferences, item.Name]
       }
 
-      if (availableFavorites.some(i => i.Name.toLowerCase().trim() === formattedItemName)) {
-        tempAvailable = availableFavorites.filter(i => i.Name.toLowerCase().trim() !== formattedItemName);
+      if (availableFavorites.some((i) => i.Name.toLowerCase().trim() === formattedItemName)) {
+        tempAvailable = availableFavorites.filter((i) => i.Name.toLowerCase().trim() !== formattedItemName)
       } else {
-        tempAvailable = [...availableFavorites, ...dailyItems.filter(i => i.Name.toLowerCase().trim() === formattedItemName)];
+        tempAvailable = [
+          ...availableFavorites,
+          ...dailyItems.filter((i) => i.Name.toLowerCase().trim() === formattedItemName),
+        ]
       }
 
-      setUserPreferences(tempPreferences);
-      setAvailableFavorites(tempAvailable);
-      postUserPreferences(tempPreferences, token as string);
+      setUserPreferences(tempPreferences)
+      setAvailableFavorites(tempAvailable)
+      postUserPreferences(tempPreferences, token as string)
     }
-  };
+  }
 
   const persistVisibleLocations = (nextVisibleLocations: string[]) => {
     if (token) {
-      postDisplayPreferences(nextVisibleLocations, token);
+      postDisplayPreferences(nextVisibleLocations, token)
     }
-  };
+  }
 
   const setVisibleLocationsAndPersist = (nextVisibleLocations: string[]) => {
-    setVisibleLocations(nextVisibleLocations);
-    persistVisibleLocations(nextVisibleLocations);
-  };
+    setVisibleLocations(nextVisibleLocations)
+    persistVisibleLocations(nextVisibleLocations)
+  }
 
   const togglePreferencesItem = (preferenceType: string, preference: string | boolean) => {
-    if (preferenceType === 'location') {
-      setVisibleLocations(prev => {
+    if (preferenceType === "location") {
+      setVisibleLocations((prev) => {
         const nextVisibleLocations = prev.includes(preference as string)
-          ? prev.filter(loc => loc !== preference)
-          : [...prev, preference as string];
-        persistVisibleLocations(nextVisibleLocations);
-        return nextVisibleLocations;
-      });
-    } else if (preferenceType === 'time') {
-      setVisibleTimes(prev =>
-        prev.includes(preference as string)
-          ? prev.filter(t => t !== preference)
+          ? prev.filter((loc) => loc !== preference)
           : [...prev, preference as string]
-      );
-    } else if (preferenceType === 'expandFolders') {
-      setExpandFolders(preference as boolean);
+        persistVisibleLocations(nextVisibleLocations)
+        return nextVisibleLocations
+      })
+    } else if (preferenceType === "time") {
+      setVisibleTimes((prev) =>
+        prev.includes(preference as string)
+          ? prev.filter((t) => t !== preference)
+          : [...prev, preference as string]
+      )
+    } else if (preferenceType === "expandFolders") {
+      setExpandFolders(preference as boolean)
     }
   }
 
   const handleTogglePreferences = (show: boolean) => {
-    setShowPreferences(show);
+    setShowPreferences(show)
     if (!token) {
-      sessionStorage.setItem("showPreferences", show.toString());
+      sessionStorage.setItem("showPreferences", show.toString())
     }
-  };
+  }
+
+  const updatedLabel = menuDataUpdatedAt
+    ? new Date(menuDataUpdatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    : null
 
   return (
-    <div className="p-6 min-h-screen bg-transparent">
-      <SEO 
-        title="Today's Menu - NUFood"
-        description="Discover today's dining options at Northwestern University. Find what's available now at your favorite campus dining locations."
-        keywords="Northwestern University dining today, NU daily menu, campus food today, Northwestern dining hours"
+    <div className="space-y-4 pb-4">
+      <SEO
+        title="Campus Dining — Today's menus"
+        description="Decide where and what to eat at Northwestern. Live-style hall status, menus, and hours for residential dining."
+        keywords="Northwestern dining, campus dining, NU dining hall menu, meal exchange"
         url="https://nufood.me/"
       />
+
       <HeaderControls
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
@@ -216,36 +226,54 @@ const DailyItems: React.FC = () => {
         openLocations={openLocations}
       />
 
-      <Input
-        type="text"
-        placeholder="Search for an item..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="mb-4 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent 
-          text-gray-900 border-gray-300 focus:ring-gray-500 
-          bg-background dark:text-white dark:border-gray-600 dark:focus:ring-gray-400"
-      />
+      {updatedLabel && (
+        <p className="text-xs text-muted-foreground">
+          Menu data last synced: <span className="font-medium text-foreground">{updatedLabel}</span>
+        </p>
+      )}
 
-      <LocationItemGrid
-        state={{
-          locationOperationHours: memoizedLocationHours,
-          visibleLocations,
-          timesOfDay,
-          visibleTimes,
-          filteredItems,
-          availableFavorites,
-          expandFolders,
-        }}
-        actions={{
-          handleItemClick,
-        }}
-      />
+      <div className="relative">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
+        <Input
+          type="search"
+          placeholder="Search dining halls or food items…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-11 rounded-xl border-border bg-card pl-10 shadow-sm"
+        />
+      </div>
+
+      <section aria-label="Filters">
+        <HomeFilterChips activeOpenNow={filterOpenNow} onOpenNowChange={setFilterOpenNow} />
+      </section>
+
+      <div>
+        <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+          All dining halls
+        </h2>
+        <LocationItemGrid
+          state={{
+            locationOperationHours: memoizedLocationHours,
+            visibleLocations: displayedLocations,
+            timesOfDay,
+            visibleTimes,
+            filteredItems,
+            availableFavorites,
+            expandFolders,
+          }}
+          actions={{
+            handleItemClick,
+          }}
+        />
+      </div>
 
       {showPopup && <AuthPopup isOpen={showPopup} onClose={() => setShowPopup(false)} />}
       <ErrorPopup isOpen={showErrorPopup} onClose={() => setShowErrorPopup(false)} />
     </div>
   )
+}
 
-};
-
-export default DailyItems;
+export default DailyItems

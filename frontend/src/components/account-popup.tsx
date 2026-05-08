@@ -83,6 +83,15 @@ const AccountPopup: React.FC<AccountPopupProps> = ({ isOpen, onClose }) => {
       sessionStorage.removeItem('userPreferences')
       sessionStorage.removeItem('availableFavorites')
 
+      if (!auth) {
+        toast({
+          title: "Signed out",
+          description: "Session cleared.",
+        })
+        onClose()
+        return
+      }
+
       await signOut(auth)
       
       toast({

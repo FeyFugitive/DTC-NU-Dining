@@ -29,7 +29,7 @@ const Preferences: React.FC = () => {
   return (
     <div className="p-6 min-h-screen text-black bg-background dark:text-white transition-colors duration-200">
       <SEO 
-        title="Your Preferences - NUFood"
+        title="Favorites & saved items"
         description="Manage your favorite Northwestern University dining items. View and edit your personalized food preferences and favorites."
         keywords="Northwestern dining preferences, NU favorite foods, campus dining favorites, Northwestern food preferences"
         url="https://nufood.me/preferences"

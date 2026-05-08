@@ -3,67 +3,75 @@
 @tailwind utilities;
 @layer base {
   :root {
-    /* Rose Pine Dawn (Light Mode) - Enhanced Vibrancy */
-    --background: 32 57% 95%; /* Base: #faf4ed */
-    --foreground: 248 25% 35%; /* Text: More vibrant #4d4668 */
-    --card: 35 100% 98%; /* Surface: #fffaf3 */
-    --card-foreground: 248 25% 35%; /* Text: #4d4668 */
-    --popover: 35 100% 98%; /* Surface: #fffaf3 */
-    --popover-foreground: 248 25% 35%; /* Text: #4d4668 */
-    --primary: 268 35% 55%; /* Iris: More vibrant #8b7ab8 */
-    --primary-foreground: 32 57% 95%; /* Base: #faf4ed */
-    --secondary: 30 40% 88%; /* Overlay: More vibrant #ede0d3 */
-    --secondary-foreground: 248 25% 35%; /* Text: #4d4668 */
-    --muted: 30 40% 88%; /* Overlay: More vibrant #ede0d3 */
-    --muted-foreground: 248 18% 48%; /* Subtle: More vibrant #726a85 */
-    --accent: 268 25% 65%; /* Softer iris for nav: #a394c7 */
-    --accent-foreground: 248 25% 25%; /* Much darker text: #3e3a4f */
-    --destructive: 343 45% 52%; /* Love: More vibrant #c85577 */
-    --destructive-foreground: 32 57% 95%; /* Base: #faf4ed */
-    --border: 30 40% 88%; /* Overlay: #ede0d3 */
-    --input: 30 40% 88%; /* Overlay: #ede0d3 */
-    --ring: 268 35% 55%; /* Iris: #8b7ab8 */
-    --chart-1: 343 45% 52%; /* Love: More vibrant */
-    --chart-2: 189 35% 45%; /* Foam: More vibrant */
-    --chart-3: 197 55% 30%; /* Pine: More vibrant */
-    --chart-4: 35 85% 50%; /* Gold: More vibrant */
-    --chart-5: 268 55% 65%; /* Saturated Purple for favorites */
-    --item-hover: 30 25% 95%; /* New: Very subtle warm hover */
-    --item-selected: 268 20% 88%; /* New: Very soft iris for selected items */
-    --item-selected-foreground: 248 25% 30%; /* Dark text on selected */
-    --radius: 0.5rem
+    /* Light — Northwestern-inspired (purple accent, neutral surfaces) */
+    --background: 260 20% 98%;
+    --foreground: 263 32% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 263 32% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 263 32% 16%;
+    /* ~#4E2A84 family — primary actions, links, favorites accent */
+    --primary: 263 52% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 263 14% 93%;
+    --secondary-foreground: 263 32% 22%;
+    --muted: 263 12% 92%;
+    --muted-foreground: 263 12% 40%;
+    --accent: 263 35% 94%;
+    --accent-foreground: 263 45% 28%;
+    --destructive: 0 72% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 263 14% 88%;
+    --input: 263 14% 88%;
+    --ring: 263 52% 38%;
+    --chart-1: 263 52% 45%;
+    --chart-2: 142 45% 42%;
+    --chart-3: 38 90% 50%;
+    --chart-4: 199 80% 38%;
+    --chart-5: 263 60% 52%;
+    --item-hover: 263 30% 96%;
+    --item-selected: 263 28% 92%;
+    --item-selected-foreground: 263 35% 22%;
+    /* Semantic scans (open/closed chips) — use via hsl(var(--status-open)) */
+    --status-open: 152 55% 36%;
+    --status-closed: 0 65% 42%;
+    --freshness-muted: 263 10% 46%;
+    --radius: 0.75rem;
   }
   .dark {
-    /* Rose Pine Main (Dark Mode) - Enhanced Vibrancy */
-    --background: 249 22% 12%; /* Base: #191724 */
-    --foreground: 245 60% 92%; /* Text: More vibrant #e6e3f7 */
-    --card: 249 20% 16%; /* Surface: More vibrant #24202f */
-    --card-foreground: 245 60% 92%; /* Text: #e6e3f7 */
-    --popover: 249 20% 16%; /* Surface: #24202f */
-    --popover-foreground: 245 60% 92%; /* Text: #e6e3f7 */
-    --primary: 267 65% 80%; /* Iris: More vibrant #ceadee */
-    --primary-foreground: 249 22% 12%; /* Base: #191724 */
-    --secondary: 248 30% 22%; /* Overlay: More vibrant #2d2a42 */
-    --secondary-foreground: 245 60% 92%; /* Text: #e6e3f7 */
-    --muted: 248 30% 22%; /* Overlay: More vibrant #2d2a42 */
-    --muted-foreground: 248 20% 65%; /* Subtle: More vibrant #9f9bb8 */
-    --accent: 267 45% 70%; /* Muted iris for nav: #b89ad6 */
-    --accent-foreground: 245 60% 92%; /* Light text: #e6e3f7 */
-    --destructive: 343 80% 70%; /* Love: More vibrant #f16d96 */
-    --destructive-foreground: 249 22% 12%; /* Base: #191724 */
-    --border: 248 30% 22%; /* Overlay: #2d2a42 */
-    --input: 248 30% 22%; /* Overlay: #2d2a42 */
-    --ring: 267 65% 80%; /* Iris: #ceadee */
-    --chart-1: 343 80% 70%; /* Love: More vibrant */
-    --chart-2: 189 50% 75%; /* Foam: More vibrant */
-    --chart-3: 197 55% 40%; /* Pine: More vibrant */
-    --chart-4: 35 90% 74%; /* Gold: More vibrant */
-    --chart-5: 267 75% 85%; /* Saturated Purple for favorites */
-    --item-hover: 248 15% 28%; /* New: Subtle overlay hover */
-    --item-selected: 267 30% 35%; /* New: Muted dark iris for selected items */
-    --item-selected-foreground: 245 50% 91%; /* Light text on selected */
-    --selected-bg: 35 90% 74%; /* Gold: More vibrant */
-    --category-bg: 249 20% 16%; /* Surface: #24202f */
+    /* Dark — cool purple-gray base, lavender primary for contrast */
+    --background: 263 24% 8%;
+    --foreground: 260 25% 94%;
+    --card: 263 22% 11%;
+    --card-foreground: 260 25% 94%;
+    --popover: 263 22% 11%;
+    --popover-foreground: 260 25% 94%;
+    --primary: 263 62% 72%;
+    --primary-foreground: 263 40% 10%;
+    --secondary: 263 18% 16%;
+    --secondary-foreground: 260 20% 92%;
+    --muted: 263 16% 18%;
+    --muted-foreground: 260 12% 65%;
+    --accent: 263 24% 20%;
+    --accent-foreground: 263 55% 88%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 260 25% 98%;
+    --border: 263 16% 20%;
+    --input: 263 16% 20%;
+    --ring: 263 62% 72%;
+    --chart-1: 263 55% 65%;
+    --chart-2: 152 50% 48%;
+    --chart-3: 38 85% 55%;
+    --chart-4: 199 70% 48%;
+    --chart-5: 263 65% 75%;
+    --item-hover: 263 18% 16%;
+    --item-selected: 263 25% 22%;
+    --item-selected-foreground: 260 25% 94%;
+    --selected-bg: 38 75% 48%;
+    --category-bg: 263 22% 11%;
+    --status-open: 152 50% 46%;
+    --status-closed: 0 55% 55%;
+    --freshness-muted: 260 12% 55%;
   }
 }
 @layer base {

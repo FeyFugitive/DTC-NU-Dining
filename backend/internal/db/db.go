@@ -385,7 +385,13 @@ func GetAllWeeklyItems() (map[string][]models.DailyItem, error) {
 
 	weeklyItemsMap := make(map[string][]models.DailyItem)
 	for _, wItem := range weeklyItems {
-		dateKey := time.Now().AddDate(0, 0, wItem.DayIndex).Format("2006-01-02")
+		dateKey := strings.TrimSpace(wItem.Date)
+		if len(dateKey) >= 10 && dateKey[4] == '-' {
+			dateKey = dateKey[:10]
+		}
+		if dateKey == "" {
+			dateKey = time.Now().AddDate(0, 0, wItem.DayIndex).Format("2006-01-02")
+		}
 		weeklyItemsMap[dateKey] = append(weeklyItemsMap[dateKey], wItem.DailyItem)
 	}
 

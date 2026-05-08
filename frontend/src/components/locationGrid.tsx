@@ -1,9 +1,9 @@
-import React from "react";
-import DailyItemAccordion from "./DailyItemAccordion"; // Import the DailyItemAccordion component
+import React, { useMemo } from "react";
+import DailyItemAccordion from "./DailyItemAccordion";
 import { LocationOperatingTimes } from "../types/OperationTypes";
 import { DailyItem } from "../types/ItemTypes";
-import Status from "./Status";
-
+import { DiningHallHomeCard } from "./dining/DiningHallHomeCard";
+import { normalizeHallKey } from "@/util/helper";
 
 interface LocationState {
   locationOperationHours: LocationOperatingTimes | undefined;
@@ -32,94 +32,114 @@ const LocationItemGrid: React.FC<LocationProps> = ({ state, actions }) => {
     visibleTimes,
     filteredItems,
     availableFavorites,
-    expandFolders
+    expandFolders,
   } = state;
 
   const { handleItemClick } = actions;
 
+  const favoritesCountByLocation = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const loc of visibleLocations) {
+      const names = new Set<string>();
+      for (const fav of availableFavorites) {
+        if (normalizeHallKey(fav.Location) === loc) {
+          names.add(fav.Name);
+        }
+      }
+      map.set(loc, names.size);
+    }
+    return map;
+  }, [availableFavorites, visibleLocations]);
+
   return (
-    <div className="min-h-screen p-6 bg-background transition-colors duration-300">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-        {visibleLocations.length > 0 &&
-          visibleLocations
-            .sort((a, b) => {
-              // Count items for each location
-              const aHasItems = timesOfDay.some(timeOfDay => 
-                filteredItems.some(item => item.Location === a && item.TimeOfDay === timeOfDay)
-              );
-              const bHasItems = timesOfDay.some(timeOfDay => 
-                filteredItems.some(item => item.Location === b && item.TimeOfDay === timeOfDay)
-              );
-              
-              // Locations with items come first
-              if (aHasItems && !bHasItems) return -1;
-              if (!aHasItems && bHasItems) return 1;
-              return 0; // Keep original order for locations with same status
-            })
-            .map((location) => {
-              // Check if this location has any items
-              const hasItems = timesOfDay.some(timeOfDay => 
-                filteredItems.some(item => item.Location === location && item.TimeOfDay === timeOfDay)
-              );
-              
-              return (
-              <div
+    <div className="flex flex-col gap-3">
+      {visibleLocations.length > 0 &&
+        visibleLocations
+          .sort((a, b) => {
+            const aHasItems = timesOfDay.some((timeOfDay) =>
+              filteredItems.some(
+                (item) => normalizeHallKey(item.Location) === a && item.TimeOfDay === timeOfDay
+              )
+            );
+            const bHasItems = timesOfDay.some((timeOfDay) =>
+              filteredItems.some(
+                (item) => normalizeHallKey(item.Location) === b && item.TimeOfDay === timeOfDay
+              )
+            );
+            if (aHasItems && !bHasItems) return -1;
+            if (!aHasItems && bHasItems) return 1;
+            return 0;
+          })
+          .map((location) => {
+            const itemsHere = filteredItems.filter((item) => normalizeHallKey(item.Location) === location);
+
+            const preferredPeriods = timesOfDay.filter((timeOfDay) => visibleTimes.includes(timeOfDay));
+            const hasMatchingPreferred = preferredPeriods.some((timeOfDay) =>
+              itemsHere.some((item) => item.TimeOfDay === timeOfDay)
+            );
+            const periodsToRender = hasMatchingPreferred
+              ? preferredPeriods.filter((timeOfDay) =>
+                  itemsHere.some((item) => item.TimeOfDay === timeOfDay)
+                )
+              : [...new Set(itemsHere.map((item) => item.TimeOfDay))].sort((x, y) =>
+                  x.localeCompare(y)
+                );
+
+            const hasItems = itemsHere.length > 0;
+
+            const hours = locationOperationHours?.[location];
+
+            return (
+              <DiningHallHomeCard
                 key={location}
-                className={`p-6 rounded-xl shadow-left-bottom transition-all duration-300 bg-card border border-border ${
-                  hasItems ? '' : 'opacity-75'
-                }`}
+                locationName={location}
+                operatingTimes={hours}
+                favoritesHereCount={favoritesCountByLocation.get(location) ?? 0}
+                hasMenuItems={hasItems}
+                hallHref={`/hall/${encodeURIComponent(location)}`}
               >
-                <h2 className="text-2xl font-bold mb-4 text-card-foreground">{location}</h2>
-                {locationOperationHours && (<Status operatingTimes={locationOperationHours[location]} />)}
-                {timesOfDay
-                  .filter((timeOfDay) => visibleTimes.includes(timeOfDay))
-                  .map((timeOfDay) => {
-                    const itemsByTimeOfDay = filteredItems.filter(
-                      (item) => item.Location === location && item.TimeOfDay === timeOfDay
-                    );
+                {periodsToRender.map((timeOfDay) => {
+                  const itemsByTimeOfDay = filteredItems.filter(
+                    (item) => normalizeHallKey(item.Location) === location && item.TimeOfDay === timeOfDay
+                  );
 
-                    const filteredAvailableFavorites = Array.from(
-                      new Map(
-                        availableFavorites
-                          .filter(
-                            (favorite) =>
-                              favorite.Location === location && favorite.TimeOfDay === timeOfDay
-                          )
-                          .map((favorite) => [favorite.Name, favorite]) // Use `Name` as a key to ensure uniqueness
-                      ).values()
-                    );
+                  const filteredAvailableFavorites = Array.from(
+                    new Map(
+                      availableFavorites
+                        .filter(
+                          (f) => normalizeHallKey(f.Location) === location && f.TimeOfDay === timeOfDay
+                        )
+                        .map((f) => [f.Name, f])
+                    ).values()
+                  );
 
-                    return (
-                      itemsByTimeOfDay.length > 0 && (
-                        <div key={timeOfDay} className="mb-4">
-                          <h3 className="text-lg font-semibold mb-3 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-1">
-                            {timeOfDay}
-                          </h3>
-                          {/* Pass filtered availableFavorites */}
-                          <DailyItemAccordion
-                            items={itemsByTimeOfDay} // Pass filtered items for the time of day
-                            availableFavorites={filteredAvailableFavorites} // Pass filtered favorites
-                            handleItemClick={handleItemClick} // Pass click handler
-                            expandFolders={expandFolders}
-                          />
-                        </div>
-                      )
-                    );
-                  })}
-                
-                {/* Show a message if no items available */}
+                  return (
+                    itemsByTimeOfDay.length > 0 && (
+                      <div key={timeOfDay} className="mb-3 last:mb-0">
+                        <h3 className="mb-2 border-b border-border/50 pb-1 text-sm font-semibold text-foreground">
+                          {timeOfDay}
+                        </h3>
+                        <DailyItemAccordion
+                          items={itemsByTimeOfDay}
+                          availableFavorites={filteredAvailableFavorites}
+                          handleItemClick={handleItemClick}
+                          expandFolders={expandFolders}
+                        />
+                      </div>
+                    )
+                  );
+                })}
+
                 {!hasItems && (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground text-sm">No items available</p>
-                  </div>
+                  <p className="px-1 py-3 text-center text-sm text-muted-foreground">
+                    No menu items listed for the selected meals.
+                  </p>
                 )}
-              </div>
-              );
-            })}
-      </div>
+              </DiningHallHomeCard>
+            );
+          })}
     </div>
   );
-
 };
 
 export default LocationItemGrid;

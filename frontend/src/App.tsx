@@ -11,10 +11,14 @@ import AllItems from './pages/AllItems';
 import DailyItems from './pages/DailyItems';
 import OperationHours from './pages/OperationHours';
 import Preferences from './pages/Preferences';
+import DiningHall from './pages/DiningHall';
 
 function App() {
-  ReactGA.initialize(import.meta.env.VITE_GA_MEASUREMENT_ID);
-  ReactGA.send({ hitType: 'pageview', page: '/' });
+  const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  if (typeof gaId === 'string' && gaId.length > 0) {
+    ReactGA.initialize(gaId);
+    ReactGA.send({ hitType: 'pageview', page: '/' });
+  }
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -28,6 +32,7 @@ function App() {
                 <Route path="/hours" element={<OperationHours />} />
                 <Route path="/preferences" element={<Preferences />} />
                 <Route path="/all" element={<AllItems />} />
+                <Route path="/hall/:locationName" element={<DiningHall />} />
                 {/* <Route path="/planner" element={<NutrientPlanner />} /> */}
               </Routes>
             </DataLoader>

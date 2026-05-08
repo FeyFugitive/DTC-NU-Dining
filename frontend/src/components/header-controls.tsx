@@ -32,20 +32,34 @@ export function HeaderControls({
   openLocations,
 }: HeaderControlsProps) {
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-        Daily Items for {format(selectedDate, "PP")}
-        <div className="text-lg font-normal">
-          {openLocations.length > 0 ? `(${openLocations.length} locations open)` : "(All locations closed)"}
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Today
+          </p>
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            {format(selectedDate, "EEEE, MMM d")}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {openLocations.length > 0
+              ? `${openLocations.length} hall${openLocations.length !== 1 ? "s" : ""} open right now`
+              : "No residential halls open for this period"}
+          </p>
         </div>
-      </h1>
-
-      <div className="flex items-center gap-3">
-        <PreferencesDialog showPreferences={showPreferences} state={preferencesState} actions={preferencesActions} />
-
-        <DatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate} setDailyItems={setDailyItems} />
+        <div className="flex shrink-0 items-center gap-2">
+          <DatePicker
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            setDailyItems={setDailyItems}
+          />
+        </div>
       </div>
+      <PreferencesDialog
+        showPreferences={showPreferences}
+        state={preferencesState}
+        actions={preferencesActions}
+      />
     </div>
   )
 }
-

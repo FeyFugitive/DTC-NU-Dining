@@ -228,7 +228,7 @@ const OperationHours: React.FC = () => {
   return (
     <div className="p-6 min-h-screen bg-background">
       <SEO
-        title="Dining Hours - NUFood"
+        title="Dining hours"
         description="Check current operating hours for all Northwestern University dining locations. Find out when your favorite campus restaurants and dining halls are open."
         keywords="Northwestern dining hours, NU restaurant hours, campus dining schedule, Northwestern food hours"
         url="https://nufood.me/hours"

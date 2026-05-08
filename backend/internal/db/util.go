@@ -3,6 +3,7 @@ package db
 import (
 	"backend/internal/models"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -39,7 +40,13 @@ func CleanAllData(newItems []models.AllDataItem) ([]models.AllDataItem, error) {
 func CreateWeeklyItemsMap(weeklyItems []models.WeeklyItem) map[string][]models.DailyItem {
 	weeklyItemsMap := make(map[string][]models.DailyItem)
 	for _, wItem := range weeklyItems {
-		dateKey := time.Now().AddDate(0, 0, wItem.DayIndex).Format("2006-01-02")
+		dateKey := strings.TrimSpace(wItem.DailyItem.Date)
+		if len(dateKey) >= 10 && dateKey[4] == '-' {
+			dateKey = dateKey[:10]
+		}
+		if dateKey == "" {
+			dateKey = time.Now().AddDate(0, 0, wItem.DayIndex).Format("2006-01-02")
+		}
 		weeklyItemsMap[dateKey] = append(weeklyItemsMap[dateKey], wItem.DailyItem)
 	}
 

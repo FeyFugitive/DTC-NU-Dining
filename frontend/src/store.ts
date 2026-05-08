@@ -7,6 +7,8 @@ interface DataState {
   UserDataResponse: UserDataResponse;
   loading: boolean;
   error: string | null;
+  /** ISO timestamp when menu/general API data last synced successfully in this session */
+  menuDataUpdatedAt: string | null;
   hasFetchedAllData: boolean; // flag for all data fetch
   hasFetchedGeneralData: boolean; // flag for general data fetch
   hasFetchedOperatingTimes: boolean; // flag for operating times
@@ -18,13 +20,18 @@ interface DataState {
   updateNutritionGoals: (goals: NutritionGoals) => void;
   resetFetchFlags: () => void;
   clearUserData: () => Promise<void>;
+  /** Re-fetches menus + hours from the API (bypasses one-shot fetch guards). */
+  refreshMenuData: (userToken: string | null) => Promise<void>;
 }
 
 const fetchData = async (endpoint: string, authToken?: string) => {
   const headers: HeadersInit = {
     ...(authToken && { Authorization: `Bearer ${authToken}` })
   };
-  const response = await fetch(endpoint, { headers });
+  const response = await fetch(endpoint, {
+    headers,
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch data: ${response.statusText}`);
@@ -54,6 +61,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
   loading: false,
   error: null,
+  menuDataUpdatedAt: null,
   hasFetchedAllData: false,
   hasFetchedGeneralData: false,
   hasFetchedOperatingTimes: false,
@@ -91,6 +99,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         },
         loading: false,
         hasFetchedAllData: true,
+        menuDataUpdatedAt: new Date().toISOString(),
       });
     } catch (error) {
       set({ error: (error as Error).message, loading: false });
@@ -126,6 +135,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         },
         loading: false,
         hasFetchedGeneralData: true,
+        menuDataUpdatedAt: new Date().toISOString(),
       });
     } catch (error) {
       set({ error: (error as Error).message, loading: false });
@@ -210,6 +220,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       hasFetchedAllData: false,
       hasFetchedGeneralData: false,
       hasFetchedOperatingTimes: false,
+      menuDataUpdatedAt: null,
     });
   },
 
@@ -226,9 +237,21 @@ export const useDataStore = create<DataState>((set, get) => ({
       hasFetchedAllData: false,
       hasFetchedGeneralData: false,
       hasFetchedOperatingTimes: false,
+      menuDataUpdatedAt: null,
     });
 
     // Then immediately fetch general data to update the UI
     await get().fetchGeneralData();
+  },
+
+  refreshMenuData: async (userToken: string | null) => {
+    if (get().loading) return;
+    if (userToken) {
+      set({ hasFetchedAllData: false });
+      await get().fetchAllData(userToken);
+    } else {
+      set({ hasFetchedGeneralData: false });
+      await get().fetchGeneralData();
+    }
   },
 }));

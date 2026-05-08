@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useDataStore } from "@/store"
+import { getDailyItemsForDate, getMenuCoverageDates } from "@/util/helper"
 
 interface DatePickerProps {
   selectedDate: Date
@@ -20,18 +21,11 @@ export function DatePicker({ selectedDate, setSelectedDate, setDailyItems, minDa
   const weeklyItems = staticData.weeklyItems
   const [isOpen, setIsOpen] = useState(false)
 
-  function toLocalISODate(d: Date) {
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
   function onSubmit(date: Date | undefined) {
     if (date) {
       setSelectedDate(date);
       if (setDailyItems && weeklyItems) {
-        setDailyItems(weeklyItems[toLocalISODate(date)]);
+        setDailyItems(getDailyItemsForDate(weeklyItems, date))
       }
       setIsOpen(false);
     }
@@ -41,9 +35,7 @@ export function DatePicker({ selectedDate, setSelectedDate, setDailyItems, minDa
   let minDate = minDateProp
   let maxDate = maxDateProp
   if (!minDateProp || !maxDateProp) {
-    const keys = Object.keys(weeklyItems || {})
-      .filter(Boolean)
-      .sort() // YYYY-MM-DD sorts lexicographically
+    const keys = getMenuCoverageDates(weeklyItems)
 
     const parseLocal = (s: string) => {
       const [y, m, d] = s.split('-').map((n) => parseInt(n, 10))

@@ -3,7 +3,7 @@ import { useDataStore } from '../store';
 import { useAuth } from '@/context/AuthProvider';
 
 const DataLoader = ({ children }: { children: React.ReactNode }) => {
-  const { fetchAllData, fetchGeneralData, clearUserData, hasFetchedAllData, hasFetchedGeneralData } = useDataStore();
+  const { fetchAllData, fetchGeneralData, clearUserData, refreshMenuData } = useDataStore();
   const { token, authLoading } = useAuth();
   const prevTokenRef = useRef<string | null>(null);
 
@@ -26,7 +26,28 @@ const DataLoader = ({ children }: { children: React.ReactNode }) => {
       // Update the ref for next comparison
       prevTokenRef.current = token;
     }
-  }, [fetchAllData, fetchGeneralData, clearUserData, token, authLoading, hasFetchedAllData, hasFetchedGeneralData]);
+  }, [fetchAllData, fetchGeneralData, clearUserData, token, authLoading]);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    const run = () => {
+      void refreshMenuData(token ?? null);
+    };
+
+    const intervalId = window.setInterval(run, 5 * 60 * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        run();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [authLoading, token, refreshMenuData]);
 
   return <>{children}</>;
 };

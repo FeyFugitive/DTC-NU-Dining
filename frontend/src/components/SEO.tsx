@@ -9,18 +9,20 @@ interface SEOProps {
   type?: string;
 }
 
-const DEFAULT_DESCRIPTION = "Find dining options, hours, and nutrition information for Northwestern University. Plan your meals and track nutrition goals with our comprehensive dining guide.";
+const DEFAULT_TITLE = "Campus Dining — Northwestern";
+const SITE_NAME = "Campus Dining";
+const DEFAULT_DESCRIPTION = "Decide where and what to eat at Northwestern. Menus, hall status, and hours for campus dining.";
 const DEFAULT_IMAGE = "https://nufood.me/fork_knife.png";
 
 export default function SEO({
-  title = "NUFood - Northwestern University Dining Guide & Nutrition Planner",
+  title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
-  keywords = "Northwestern University, dining, food, nutrition, campus dining, meal planning, NU food, university dining guide",
+  keywords = "Northwestern University, campus dining, dining halls, NU food, meal exchange",
   image = DEFAULT_IMAGE,
   url = "https://nufood.me/",
   type = "website"
 }: SEOProps) {
-  const fullTitle = title.includes('NUFood') ? title : `${title} | NUFood`;
+  const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
 
   return (
     <Helmet>

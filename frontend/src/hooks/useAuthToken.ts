@@ -10,8 +10,14 @@ export const useAuthToken = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Monitor the auth state
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    if (!auth) {
+      setAuthLoading(false);
+      return;
+    }
+
+    const authInstance = auth;
+
+    const unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
 
@@ -21,7 +27,7 @@ export const useAuthToken = () => {
         setToken(freshToken);
 
         // Listen for token changes and refresh token when it changes
-        const tokenUnsubscribe = auth.onIdTokenChanged(async (user) => {
+        const tokenUnsubscribe = authInstance.onIdTokenChanged(async (user) => {
           if (user) {
             const updatedToken = await user.getIdToken();
             setToken(updatedToken);

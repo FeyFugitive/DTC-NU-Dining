@@ -1,183 +1,161 @@
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
-import { CalendarDays, Heart, Home, ListTodo, Menu, Moon, Sun, User } from "lucide-react"
+import {
+  CalendarDays,
+  Heart,
+  Home,
+  ListTodo,
+  Moon,
+  MoreHorizontal,
+  Sun,
+  User,
+} from "lucide-react"
 import * as React from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, NavLink, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthProvider"
 import AccountPopup from "./account-popup"
 import BuyMeCoffee from "./buy-me-a-coffee"
 import FeedbackButton from "./feedback-button"
 import { useTheme } from "./theme-provider"
 import { Button } from "./ui/button"
-import { ScrollArea } from "./ui/scroll-area"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet"
 
-// Utility function for conditional class names
 const cn = (...classes: string[]) => classes.filter(Boolean).join(" ")
 
-interface NavItem {
-  title: string
-  href: string
-  icon: React.ReactNode
-}
-
-const navItems: NavItem[] = [
-  { title: "Daily Items", href: "/", icon: <Home className="mr-2 h-4 w-4" /> },
-  { title: "All Items", href: "/all", icon: <ListTodo className="mr-2 h-4 w-4" /> },
-  { title: "Operation Hours", href: "/hours", icon: <CalendarDays className="mr-2 h-4 w-4" /> },
-  // { title: "Nutrient Planner", href: "/planner", icon: <PieChart className="mr-2 h-4 w-4" /> },
-]
-
-const preferences: NavItem = {
-  title: "Your Favorites",
-  href: "/preferences",
-  icon: <Heart className="mr-2 h-4 w-4" />,
+function TabIcon({
+  to,
+  end,
+  icon: Icon,
+  label,
+}: {
+  to: string
+  end?: boolean
+  icon: React.ElementType
+  label: string
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        cn(
+          "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold transition-colors",
+          isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+        )
+      }
+    >
+      <Icon className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+      <span className="truncate">{label}</span>
+    </NavLink>
+  )
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false)
+  const [moreOpen, setMoreOpen] = React.useState(false)
   const [accountPopupOpen, setAccountPopupOpen] = React.useState(false)
   const { theme, setTheme } = useTheme()
   const location = useLocation()
   const { token } = useAuth()
 
-  const loggedIn = !!token
-
   return (
     <>
-      <div className="flex h-screen overflow-hidden">
-        {/* Sidebar for desktop */}
-        <aside className="hidden lg:flex w-56 flex-col bg-background">
-          <div className="flex h-14 items-center border-b px-4">
-            <Link to="/" className="flex items-center font-semibold">
-              NUFood
-            </Link>
-          </div>
-          <ScrollArea className="flex-1">
-            <nav className="flex flex-col gap-1 px-1 py-2">
-              {navItems.map((item, index) => (
-                <Link
-                  key={index}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
-                    location.pathname === item.href ? "bg-accent text-accent-foreground" : "transparent",
-                  )}
-                >
-                  {item.icon}
-                  {item.title}
-                </Link>
-              ))}
-              {loggedIn && (
-                <Link
-                  key={"preferences"}
-                  to={preferences.href}
-                  className={cn(
-                    "flex items-center rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
-                    location.pathname === preferences.href ? "bg-accent text-accent-foreground" : "transparent",
-                  )}
-                >
-                  {preferences.icon}
-                  {preferences.title}
-                </Link>
-              )}
-            </nav>
-          </ScrollArea>
-          <div className="border-t p-4 space-y-4">
+      <div className="flex min-h-[100dvh] flex-col bg-background">
+        <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/95 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+          <Link to="/" className="text-sm font-bold tracking-tight text-foreground">
+            Campus Dining
+          </Link>
+          <div className="flex items-center gap-1">
             <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-              onClick={() => setAccountPopupOpen(true)}
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              aria-label="Toggle theme"
             >
-              <User className="h-4 w-4 mr-2" />
-              Account
+              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
-            <FeedbackButton />
-            <BuyMeCoffee className="w-full" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setAccountPopupOpen(true)}
+              aria-label="Account"
+            >
+              <User className="h-4 w-4" />
+            </Button>
           </div>
-        </aside>
+        </header>
 
-        {/* Main content area */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Navbar */}
-          <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
-            <Sheet open={open} onOpenChange={setOpen}>
+        <main className="flex w-full flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-2 sm:pt-3">
+          <div className="mx-auto w-full max-w-2xl flex-1 px-3 sm:px-4">{children}</div>
+        </main>
+
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-card/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.08)] backdrop-blur-md dark:shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.35)]"
+          aria-label="Primary"
+        >
+          <div className="mx-auto flex max-w-2xl items-stretch justify-around">
+            <TabIcon to="/" end icon={Home} label="Home" />
+            <TabIcon to="/preferences" icon={Heart} label="Favorites" />
+            <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="lg:hidden">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetTitle className="hidden">
-                <VisuallyHidden.Root>x</VisuallyHidden.Root>
-              </SheetTitle>
-              <SheetContent side="left" className="w-56 p-0">
-                <nav className="flex flex-col gap-1 px-1 py-2 pt-12">
-                  {navItems.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.href}
-                      className={cn(
-                        "flex items-center rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent",
-                        location.pathname === item.href ? "bg-accent" : "transparent",
-                      )}
-                      onClick={() => setOpen(false)}
-                    >
-                      {item.icon}
-                      {item.title}
-                    </Link>
-                  ))}
-                  {loggedIn && (
-                    <Link
-                      key={"preferences"}
-                      to={preferences.href}
-                      className={cn(
-                        "flex items-center rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent",
-                        location.pathname === preferences.href ? "bg-accent" : "transparent",
-                      )}
-                      onClick={() => setOpen(false)}
-                    >
-                      {preferences.icon}
-                      {preferences.title}
-                    </Link>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold transition-colors",
+                    ["/all", "/hours"].some((p) => location.pathname.startsWith(p))
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
-                </nav>
-                <div className="border-t p-4 mt-auto space-y-4">
+                >
+                  <MoreHorizontal className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+                  <span>More</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 pt-2">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>More options</SheetTitle>
+                </SheetHeader>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Navigation
+                </p>
+                <nav className="flex flex-col gap-1">
+                  <Link
+                    to="/all"
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium hover:bg-accent"
+                  >
+                    <ListTodo className="h-4 w-4 text-primary" />
+                    All menu items
+                  </Link>
+                  <Link
+                    to="/hours"
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium hover:bg-accent"
+                  >
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    Dining hours
+                  </Link>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start"
+                    variant="ghost"
+                    className="h-auto justify-start gap-3 rounded-xl px-3 py-3 font-medium"
                     onClick={() => {
+                      setMoreOpen(false)
                       setAccountPopupOpen(true)
-                      setOpen(false)
                     }}
                   >
-                    <User className="mr-2 h-4 w-4" />
-                    Account
+                    <User className="h-4 w-4 text-primary" />
+                    Account {token ? "" : "(sign in)"}
                   </Button>
+                </nav>
+                <div className="mt-4 space-y-3 border-t border-border pt-4">
                   <FeedbackButton />
                   <BuyMeCoffee className="w-full" />
                 </div>
               </SheetContent>
             </Sheet>
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold">
-                {navItems.find((item) => item.href === location.pathname)?.title ||
-                  (preferences.href === location.pathname ? preferences.title : "Dashboard")}
-              </h1>
-            </div>
-            <Button variant="outline" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-          </header>
-
-          {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
-        </div>
+          </div>
+        </nav>
       </div>
       <AccountPopup isOpen={accountPopupOpen} onClose={() => setAccountPopupOpen(false)} />
     </>
   )
 }
-

@@ -59,6 +59,8 @@ const DailyItemAccordion: React.FC<Props> = ({
 
 
   const defaultExpandedStations = ["My Favorites", "Comfort", "Comfort 1", "Comfort 2", "Rooted", "Rooted 1", "Rooted 2", "Pure Eats", "Pure Eats 1", "Pure Eats 2", "Kitchen Entree", "Kitchen Sides"]
+  const compactItemButtonClass =
+    "w-full text-left rounded-md border px-3 py-2 text-[13px] font-medium leading-tight transition-colors duration-150 focus:outline-none"
 
   return (
     <div>
@@ -73,13 +75,13 @@ const DailyItemAccordion: React.FC<Props> = ({
             My Favorites
           </AccordionSummary>
           <AccordionDetails>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5">
               {availableFavorites.map((item, index) => (
                 <li key={`fav-${item.Name}-${index}`}>
                   <button
                     onClick={() => handleItemClick(item)}
                     className={clsx(
-                      "w-full text-left p-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md focus:outline-none border-2 mb-2",
+                      compactItemButtonClass,
                       "bg-item-selected text-item-selected-foreground border-chart-5 shadow-sm"
                     )}
                   >
@@ -105,13 +107,13 @@ const DailyItemAccordion: React.FC<Props> = ({
               {stationName}
             </AccordionSummary>
             <AccordionDetails>
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {itemsByStation[stationName].map((item, index) => (
                   <li key={`${item.Name}-${index}`}>
                     <button
                       onClick={() => handleItemClick(item)}
                       className={clsx(
-                        "w-full text-left p-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md focus:outline-none border-2 mb-2",
+                        compactItemButtonClass,
                         availableFavorites.some((fav) => fav.Name === item.Name)
                           ? "bg-item-selected text-item-selected-foreground border-primary shadow-sm"
                           : "bg-card text-card-foreground border-border hover:bg-item-hover hover:border-muted-foreground"
@@ -144,13 +146,13 @@ const DailyItemAccordion: React.FC<Props> = ({
               {stationName}
             </AccordionSummary>
             <AccordionDetails>
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {stationItems.map((item, index) => (
                   <li key={`${item.Name}-${index}`}>
                     <button
                       onClick={() => handleItemClick(item)}
                       className={clsx(
-                        "w-full text-left p-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md focus:outline-none border-2 mb-2",
+                        compactItemButtonClass,
                         availableFavorites.some((fav) => fav.Name === item.Name)
                           ? "bg-item-selected text-item-selected-foreground border-primary shadow-sm"
                           : "bg-card text-card-foreground border-border hover:bg-item-hover hover:border-muted-foreground"

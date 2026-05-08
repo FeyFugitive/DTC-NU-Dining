@@ -15,6 +15,48 @@ Live at: [nufood.me](https://nufood.me)
 -  Email notifications of where favorite foods are
 -  Nutrition tracking to hit your goals
 
+## Local development (frontend)
+
+The Vite app and all npm dependencies live in **`frontend/`**. Do not rely on a root `node_modules` from npm workspaces; that layout often triggers **`TAR_ENTRY_ERROR` / corrupted tarball** warnings on macOS (CloudDocs, antivirus, or interrupted installs).
+
+**Install and build** (paste one line at a time, or use the block below — it has no `#` lines so **zsh** will not try to run `#` as a command):
+
+```bash
+cd frontend
+rm -rf node_modules
+npm cache verify
+npm install
+npm run build
+```
+
+To also delete a stray **root** `node_modules` first, run this from the **repository root** (still no comment lines):
+
+```bash
+cd /path/to/DTC-NU-Dining
+rm -rf node_modules
+cd frontend
+rm -rf node_modules
+npm cache verify
+npm install
+npm run build
+```
+
+If installs still fail, clear the npm cache and retry:
+
+```bash
+npm cache clean --force
+cd frontend && rm -rf node_modules && npm install
+```
+
+From the **repository root** you can use convenience scripts (they delegate to `frontend/`):
+
+```bash
+npm install --prefix frontend
+npm run build
+```
+
+If pasting instructions from the web, avoid lines that start with `#` in **zsh** unless you have enabled comments: `setopt interactivecomments`.
+
 ## Tech Stack
 
 ### Frontend

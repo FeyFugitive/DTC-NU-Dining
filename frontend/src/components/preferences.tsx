@@ -25,10 +25,15 @@ interface PreferencesProps {
 const PreferencesDialog: React.FC<PreferencesProps> = ({ showPreferences, state, actions }) => {
   return (
     <>
-      <Button onClick={() => actions.setShowPreferences(true)} variant="outline" size="sm" className="mb-2 h-9 px-3">
-        <Settings className="h-4 w-4" />
-        Display Settings
-      </Button >
+      <Button
+        onClick={() => actions.setShowPreferences(true)}
+        variant="outline"
+        size="sm"
+        className="h-9 gap-2 rounded-full border-dashed px-4 text-xs font-semibold"
+      >
+        <Settings className="h-3.5 w-3.5" />
+        Halls, meals & display
+      </Button>
 
       <Dialog open={showPreferences} onOpenChange={actions.setShowPreferences}>
         <DialogContent
@@ -41,7 +46,7 @@ const PreferencesDialog: React.FC<PreferencesProps> = ({ showPreferences, state,
           "
         >
           <DialogHeader>
-            <DialogTitle>Display Settings</DialogTitle>
+            <DialogTitle>Halls, meals & display</DialogTitle>
           </DialogHeader>
 
           <Tabs defaultValue="locations" className="w-full" >
