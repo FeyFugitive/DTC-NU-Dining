@@ -1,104 +1,162 @@
-# NUFood
+# Campus Dining (Northwestern)
 
-A modern, fast alternative to Northwestern University's Dine on Campus app. View dining hall menus, operating hours, track your nutrition, and save your favorite foods to get personalized recommendations on where to dine.
+Campus Dining is a mobile-first web app for quickly deciding where to eat at Northwestern.  
+It focuses on a clean hall-first flow: scan hall cards, tap into a dining hall page, and browse live menu sections with minimal friction.
 
-Live at: [nufood.me](https://nufood.me)
+## What Makes This App Different
 
-## Features
+- Hall-first UX with stacked cards, status chips, and quick drill-down into each dining hall
+- Compact, dense menu rows designed for faster scanning on phone screens
+- Live menu and operating-hour data served through a local Go API + scraper pipeline
+- Optional Google sign-in for favorites and personalized data
+- Lightweight shell/navigation tuned for day-to-day use rather than a heavy dashboard layout
 
--  Fast, responsive interface
--  Real-time dining hall items and operating hours
--  View future and past daily menus within the week
--  Search through all available menu items
--  Save favorite foods and get personalized recommendations
--  Mobile-friendly design
--  Email notifications of where favorite foods are
--  Nutrition tracking to hit your goals
+## Current Product Scope
 
-## Local development (frontend)
+- Home feed with:
+  - dining hall cards (open/closed, wait, crowd placeholder, payment tags)
+  - search + quick filters
+  - per-hall navigation
+- Dining hall detail page:
+  - hall metadata
+  - per-period menu sections (including non-standard periods when present)
+  - favorite toggling (when signed in)
+- Supporting views:
+  - all menu items
+  - operation hours
+  - preferences
 
-The Vite app and all npm dependencies live in **`frontend/`**. Do not rely on a root `node_modules` from npm workspaces; that layout often triggers **`TAR_ENTRY_ERROR` / corrupted tarball** warnings on macOS (CloudDocs, antivirus, or interrupted installs).
-
-**Install and build** (paste one line at a time, or use the block below — it has no `#` lines so **zsh** will not try to run `#` as a command):
-
-```bash
-cd frontend
-rm -rf node_modules
-npm cache verify
-npm install
-npm run build
-```
-
-To also delete a stray **root** `node_modules` first, run this from the **repository root** (still no comment lines):
-
-```bash
-cd /path/to/DTC-NU-Dining
-rm -rf node_modules
-cd frontend
-rm -rf node_modules
-npm cache verify
-npm install
-npm run build
-```
-
-If installs still fail, clear the npm cache and retry:
-
-```bash
-npm cache clean --force
-cd frontend && rm -rf node_modules && npm install
-```
-
-From the **repository root** you can use convenience scripts (they delegate to `frontend/`):
-
-```bash
-npm install --prefix frontend
-npm run build
-```
-
-If pasting instructions from the web, avoid lines that start with `#` in **zsh** unless you have enabled comments: `setopt interactivecomments`.
-
-## Tech Stack
+## Stack
 
 ### Frontend
-- React with TypeScript
-- Vite for build tooling
-- Tailwind CSS for styling
-- Firebase Authentication
-- Google Analytics for usage tracking
+- React + TypeScript
+- Vite
+- Tailwind CSS + shadcn/ui + MUI (existing accordion components)
+- Firebase Auth (Google sign-in)
 
 ### Backend
-- Go (Golang) for API and scraping
-- PostgreSQL database 
-- Firebase Admin SDK for auth verification
-- Headless Chromium (`chromedp`) for browser-context DineOnCampus API fetching
+- Go API
+- PostgreSQL
+- Headless Chromium (`chromedp`) scraper against Dine On Campus endpoints
+- Firebase Admin SDK for token verification
 
-## Deployment
+## Local Development
 
-The application is deployed using:
+This repo runs as two local processes:
+- frontend dev server on `http://localhost:5173`
+- backend API on `http://localhost:8081`
+
+### 1) Prerequisites
+
+- Node.js + npm
+- Go (1.22+ recommended)
+- PostgreSQL (local or remote)
+- Firebase project (for optional auth)
+
+### 2) Backend setup
+
+Create `backend/.env`:
+
+```env
+POSTGRES_URL=postgres://USER:PASSWORD@HOST:5432/DBNAME?sslmode=disable
+```
+
+Add Firebase Admin key file for local auth verification:
+- path: `backend/firebase_keys.json`
+- source: Firebase Console -> Project Settings -> Service Accounts -> Generate new private key
+
+Start backend:
+
+```bash
+cd backend
+go run .
+```
+
+Expected startup log includes: `Server starting on port 8081`.
+
+### 3) Seed menu + hours data (required on fresh DB)
+
+In a separate terminal:
+
+```bash
+curl -i http://localhost:8081/api/scrapeWeeklyItems
+curl -i http://localhost:8081/api/scrapeOperatingTimes
+```
+
+Sanity check:
+
+```bash
+curl -s http://localhost:8081/api/generalData | head -c 300
+```
+
+It should return JSON (starts with `{`), not an error string.
+
+### 4) Frontend setup
+
+Create `frontend/.env`:
+
+```env
+VITE_BACKEND_URL=http://localhost:8081
+
+VITE_FIREBASE_APIKEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGE_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=...
+```
+
+Notes:
+- Firebase vars are required for Google sign-in.
+- If omitted, app still runs but auth is disabled.
+
+Start frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Common Restart Flow
+
+When coming back to work:
+
+1. Terminal A
+   ```bash
+   cd backend
+   go run .
+   ```
+2. Terminal B
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+3. If DB is empty, rerun the two scrape endpoints.
+
+## Deployment Notes
+
 - Frontend: Vercel
 - Backend: Railway
-- Database: Railway PostgreSQL
+- Database: Railway Postgres
 
-### Backend Runtime Note
-The backend now relies on a Chrome-based headless runtime for scraping. Use the pinned `backend/Dockerfile` on Railway to guarantee Chromium availability and set `CHROME_BIN` consistently.
+For Railway/backend containers, ensure Chromium runtime support is present for scraper jobs and `CHROME_BIN` is configured when needed.
 
-## Screenshots
+## Troubleshooting
 
-### Weekly Items View
-![Weekly Items View showing dining locations items and their current status](./frontend/public/images/main.png)
-
-### All Items View
-![Display of all historical items that Northwestern has served.](./frontend/public/images/allItems.png)
-
-### Operation Hours
-![Operation Hours View showing dining locations and their status](./frontend/public/images/operationTimes.png)
-
-### Nutrition Tracker
-![Nutrition Tracker that allows you to see the macros of the foods being served.](./frontend/public/images/nutrition.png)
-
-### Favorite Items Selection
-![Favorite Items View showing your selected favorites.](./frontend/public/images/favorites.png)
+- `Error fetching all items: no daily items found`
+  - weekly data not scraped yet; call `/api/scrapeWeeklyItems`
+- `Error fetching location operations: no locationOperatingTimes found`
+  - operating times not scraped yet; call `/api/scrapeOperatingTimes`
+- Google sign-in popup fails
+  - verify Google provider is enabled
+  - verify `localhost` is in Firebase Authorized Domains
+  - verify all `VITE_FIREBASE_*` vars exist and frontend was restarted
+- `go: command not found`
+  - install Go and reopen terminal
 
 ## Contributing
 
-This is primarily a personal project for Northwestern University students, but feel free to open issues if you encounter any bugs or have suggestions for improvements.
+Issues and PRs are welcome.  
+If you change data contracts between backend and frontend, include both sides in the same PR and document any new env vars in this README.
