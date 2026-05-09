@@ -1,5 +1,11 @@
 import { OperationHoursData } from "./OperationTypes";
 
+/** Single nutrient row from Dine-on-Campus-style menus (`nutrients` JSON array). */
+export interface MenuNutrient {
+  name: string;
+  value: string;
+}
+
 export interface DailyItem {
   Name: string;
   Description: string;
@@ -12,6 +18,10 @@ export interface DailyItem {
   protein?: string;
   carbs?: string;
   fat?: string;
+  ingredients?: string;
+  nutrients?: MenuNutrient[];
+  /** Upstream menu row id (optional; used when enriching nutrition from detail APIs). */
+  menuItemId?: string;
 }
 
 export interface Item {

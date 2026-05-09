@@ -12,8 +12,7 @@ import * as React from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthProvider"
 import AccountPopup from "./account-popup"
-import BuyMeCoffee from "./buy-me-a-coffee"
-import FeedbackButton from "./feedback-button"
+// import FeedbackButton from "./feedback-button"
 import { useTheme } from "./theme-provider"
 import { Button } from "./ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet"
@@ -146,10 +145,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     Account {token ? "" : "(sign in)"}
                   </Button>
                 </nav>
-                <div className="mt-4 space-y-3 border-t border-border pt-4">
+                {/* <div className="mt-4 space-y-3 border-t border-border pt-4">
                   <FeedbackButton />
-                  <BuyMeCoffee className="w-full" />
-                </div>
+                </div> */}
               </SheetContent>
             </Sheet>
           </div>

@@ -26,52 +26,57 @@ import (
 // I am assuming for now that everything is running correctly :D
 
 func TestScrapeFood(t *testing.T) {
-	// Define a mock HTTP response
-	mockResponse := models.DiningHallResponse{
-		Menu: models.Menu{
-			Date: "2024-12-16",
-			Periods: models.Periods{
-				Categories: []models.Category{
-					{
-						Name: "Comfort",
-						Items: []models.Item{
-							{Name: "Pancakes", Description: "Delicious pancakes"},
-							// Test of flagged ingredient food should not be in end results
-							{Name: "Butter", Description: "That Lard"},
-						},
+	mockMenu := models.DiningHallResponse{
+		Date: "2024-12-16",
+		Period: models.Periods{
+			Categories: []models.Category{
+				{
+					Name: "Comfort",
+					Items: []models.Item{
+						{Name: "Pancakes", Description: "Delicious pancakes"},
+						{Name: "Butter", Description: "That Lard"},
 					},
-					{
-						// Test of flagged ingredient category ie no foods in category are to be saved
-						Name: "planet eats (cold)",
-						Items: []models.Item{
-							{Name: "Turkey Breast", Description: "this one didn't get pardoned"},
-							{Name: "Thinly sliced ham", Description: "Invisible from the side"},
-						},
+				},
+				{
+					Name: "planet eats (cold)",
+					Items: []models.Item{
+						{Name: "Turkey Breast", Description: "this one didn't get pardoned"},
+						{Name: "Thinly sliced ham", Description: "Invisible from the side"},
 					},
 				},
 			},
 		},
-		Closed: false,
 	}
-	mockResponseBody, err := json.Marshal(mockResponse)
-	require.NoError(t, err, "Error marshalling mock response: %v", err)
+	menuBody, err := json.Marshal(mockMenu)
+	require.NoError(t, err)
 
-	// Create a mock server
+	mockPeriods := models.LocationServicesResponse{
+		LocationId: "5b33ae291178e909d807593d",
+		Date:       "2024-12-16",
+		Services: []models.Service{
+			{ID: "66e1fc2de45d43074be3a0e5", TimeOfDay: "Breakfast"},
+		},
+	}
+	periodsBody, err := json.Marshal(mockPeriods)
+	require.NoError(t, err)
+
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		query := r.URL.Query()
 
 		fmt.Printf("Mock server received request: Path=%s, Query=%v\n", path, query)
 
-		// Match the expected endpoint pattern
-		if strings.HasPrefix(path, "/v1/location/5b33ae291178e909d807593d/periods/66e1fc2de45d43074be3a0e5") &&
-			query.Get("platform") == "0" && query.Get("date") != "" {
-			// Serve the mock response
-			w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
+
+		switch {
+		case strings.Contains(path, "/locations/5b33ae291178e909d807593d/periods/") && query.Get("date") != "":
 			w.WriteHeader(http.StatusOK)
-			w.Write(mockResponseBody)
-		} else {
-			// Return 404 for unmatched routes
+			w.Write(periodsBody)
+		case strings.Contains(path, "/locations/5b33ae291178e909d807593d/menu") &&
+			query.Get("date") != "" && query.Get("period") == "66e1fc2de45d43074be3a0e5":
+			w.WriteHeader(http.StatusOK)
+			w.Write(menuBody)
+		default:
 			http.NotFound(w, r)
 		}
 	}))
@@ -80,36 +85,23 @@ func TestScrapeFood(t *testing.T) {
 	testConfig := scraper.ScrapeConfig{
 		BaseURL: mockServer.URL + "/v1",
 		Locations: []models.Location{
-			{
-				Name: "Allison",
-				Hash: "5b33ae291178e909d807593d",
-				Services: []models.Service{
-					{TimeOfDay: "Breakfast", Hash: "66e1fc2de45d43074be3a0e5"},
-				},
-			},
+			{Name: "Allison", Hash: "5b33ae291178e909d807593d"},
 		},
 	}
 
-	// Set up the scraper with the mock server URL
 	diningHallScraper := &scraper.DiningHallScraper{
 		Client: mockServer.Client(),
 		Config: testConfig,
 	}
 
-	// Call the ScrapeAndSaveFood method and check results
 	dailyItems, allDataItems, _, err := diningHallScraper.ScrapeFood("2024-12-16")
-	require.NoError(t, err, "Error in ScrapeAndSaveFood: %v", err)
+	require.NoError(t, err, "Error in ScrapeFood: %v", err)
 
-	// Check that the correct data was returned
 	assert.Len(t, dailyItems, 1, "Expected 1 daily item, got %d", len(dailyItems))
-
-	assert.Equal(t, "Pancakes", dailyItems[0].Name, "Expected daily item name to be 'Pancakes', got %s", dailyItems[0].Name)
-
-	assert.Equal(t, "Delicious pancakes", dailyItems[0].Description, "Expected daily item description to be 'Delicious pancakes', got %s", dailyItems[0].Description)
-
-	assert.Len(t, allDataItems, 1, "Expected 1 all data item, got %d", len(allDataItems))
-
-	assert.Equal(t, "Pancakes", allDataItems[0].Name, "Expected all data item name to be 'Pancakes', got %s", allDataItems[0].Name)
+	assert.Equal(t, "Pancakes", dailyItems[0].Name)
+	assert.Equal(t, "Delicious pancakes", dailyItems[0].Description)
+	assert.Len(t, allDataItems, 1)
+	assert.Equal(t, "Pancakes", allDataItems[0].Name)
 }
 
 func TestScrapeOperationHours(t *testing.T) {

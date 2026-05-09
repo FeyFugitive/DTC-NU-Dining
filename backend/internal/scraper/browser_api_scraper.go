@@ -126,6 +126,8 @@ func (s *BrowserAPIScraper) ScrapeFood(date string) ([]models.DailyItem, []model
 				continue
 			}
 
+			s.enrichDailyItemsFromDetailPages(allocCtx, location.Hash, date, service.ID, dItems)
+
 			if len(dItems) > 0 {
 				allClosed = false
 			}

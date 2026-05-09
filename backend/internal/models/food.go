@@ -42,20 +42,24 @@ type Category struct {
 	Items []Item `json:"items"`
 }
 
+// RecipeRef links a menu row to a backend recipe used for nutrition/ingredient detail APIs.
+type RecipeRef struct {
+	ID string `json:"id"`
+}
+
 type Item struct {
-	// id string `json:"id"`
-	Name string `json:"name"`
-	// mrn int `json:"mrn"`
-	// rev string `json:"rev"`
-	// mrn_full string `json:"mrn_full"`
-	Description string `json:"desc"`
-	// webtrition_id string `json:"webtrition_id"`
-	// sort_order int `json:"sort_order"`
-	Portion string `json:"portion"`
-	// qty string `json:"qty"`
-	// ingredients string `json:"ingredients"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Mrn         int        `json:"mrn"`
+	Description string     `json:"desc"`
+	Portion     string     `json:"portion"`
+	Recipe      *RecipeRef `json:"recipe"`
+
+	// Plain-text ingredients on list payloads are often empty; detail endpoints usually fill these.
+	Ingredients         string `json:"ingredients"`
+	IngredientStatement string `json:"ingredient_statement"`
+
 	Nutrients []Nutrient `json:"nutrients"`
-	// filters []Filter `json:"filters"`
 }
 
 type Nutrient struct {
@@ -89,6 +93,10 @@ type DailyItem struct {
 	Protein     string `json:"protein"`
 	Carbs       string `json:"carbs"`
 	Fat         string `json:"fat"`
+	Ingredients string    `json:"ingredients,omitempty"`
+	Nutrients   JSONArray `json:"nutrients,omitempty" gorm:"column:nutrients;type:text"`
+	// MenuItemID is the upstream row/recipe key used to fetch item nutrition pages (ingredients).
+	MenuItemID string `json:"menuItemId,omitempty" gorm:"column:menu_item_id;type:text"`
 }
 
 type WeeklyItem struct {

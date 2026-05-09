@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { postDisplayPreferences, postUserPreferences } from "../util/data"
 import Fuse from "fuse.js"
 import LocationItemGrid from "../components/locationGrid"
@@ -15,12 +16,14 @@ import { useDataStore } from "@/store"
 import { HeaderControls } from "../components/header-controls"
 import SEO from "../components/SEO"
 import { HomeFilterChips } from "@/components/dining/HomeFilterChips"
+import { foodItemQueryString } from "@/util/foodItemNav"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 
 const DEFAULT_LOCATIONS = ["Sargent", "Elder", "Allison", "Plex East", "Plex West"]
 
 const DailyItems: React.FC = () => {
+  const navigate = useNavigate()
   const [showPopup, setShowPopup] = useState(false)
   const { token, authLoading } = useAuth()
 
@@ -266,6 +269,8 @@ const DailyItems: React.FC = () => {
           }}
           actions={{
             handleItemClick,
+            onOpenFoodItem: (item) =>
+              navigate({ pathname: "/food", search: foodItemQueryString(item) }, { state: { item } }),
           }}
         />
       </div>

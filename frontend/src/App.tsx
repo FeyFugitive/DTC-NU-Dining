@@ -12,6 +12,7 @@ import DailyItems from './pages/DailyItems';
 import OperationHours from './pages/OperationHours';
 import Preferences from './pages/Preferences';
 import DiningHall from './pages/DiningHall';
+import FoodItem from './pages/FoodItem';
 
 function App() {
   const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/preferences" element={<Preferences />} />
                 <Route path="/all" element={<AllItems />} />
                 <Route path="/hall/:locationName" element={<DiningHall />} />
+                <Route path="/food" element={<FoodItem />} />
                 {/* <Route path="/planner" element={<NutrientPlanner />} /> */}
               </Routes>
             </DataLoader>

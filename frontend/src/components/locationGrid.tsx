@@ -17,6 +17,7 @@ interface LocationState {
 
 interface LocationActions {
   handleItemClick: (item: DailyItem) => void;
+  onOpenFoodItem?: (item: DailyItem) => void;
 }
 
 interface LocationProps {
@@ -35,7 +36,7 @@ const LocationItemGrid: React.FC<LocationProps> = ({ state, actions }) => {
     expandFolders,
   } = state;
 
-  const { handleItemClick } = actions;
+  const { handleItemClick, onOpenFoodItem } = actions;
 
   const favoritesCountByLocation = useMemo(() => {
     const map = new Map<string, number>();
@@ -123,6 +124,7 @@ const LocationItemGrid: React.FC<LocationProps> = ({ state, actions }) => {
                           items={itemsByTimeOfDay}
                           availableFavorites={filteredAvailableFavorites}
                           handleItemClick={handleItemClick}
+                          onOpenItem={onOpenFoodItem}
                           expandFolders={expandFolders}
                         />
                       </div>

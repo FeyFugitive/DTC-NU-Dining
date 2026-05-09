@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -276,6 +277,55 @@ func visitDiningHall(c *colly.Collector, url, locationName, timeOfDay string) ([
 	return dailyItems, allDataItems, closed, nil
 }
 
+// MenuItemDetailKey returns an upstream identifier for per-item nutrition/detail requests.
+func MenuItemDetailKey(item models.Item) string {
+	if id := strings.TrimSpace(item.ID); id != "" {
+		return id
+	}
+	if item.Recipe != nil {
+		if id := strings.TrimSpace(item.Recipe.ID); id != "" {
+			return id
+		}
+	}
+	if item.Mrn != 0 {
+		return strconv.Itoa(item.Mrn)
+	}
+	return ""
+}
+
+func applyMacroNutrients(dailyItem *models.DailyItem, nutrients []models.Nutrient) {
+	for _, nutrient := range nutrients {
+		switch nutrient.Name {
+		case "Calories":
+			dailyItem.Calories = nutrient.Value
+		case "Protein (g)":
+			dailyItem.Protein = nutrient.Value
+		case "Total Carbohydrates (g)":
+			dailyItem.Carbs = nutrient.Value
+		case "Total Fat (g)":
+			dailyItem.Fat = nutrient.Value
+		}
+	}
+}
+
+// populateDailyFromMenuItem copies fields from the Dine-on-Campus menu payload onto DailyItem:
+// ingredients, full nutrient list (JSON), and the legacy macro fields used elsewhere.
+func populateDailyFromMenuItem(dailyItem *models.DailyItem, item models.Item) {
+	dailyItem.MenuItemID = MenuItemDetailKey(item)
+	ing := strings.TrimSpace(item.Ingredients)
+	if ing == "" {
+		ing = strings.TrimSpace(item.IngredientStatement)
+	}
+	dailyItem.Ingredients = ing
+
+	if len(item.Nutrients) > 0 {
+		if raw, err := models.MarshalJSONArray(item.Nutrients); err == nil {
+			dailyItem.Nutrients = raw
+		}
+		applyMacroNutrients(dailyItem, item.Nutrients)
+	}
+}
+
 // parseItems parses menu items from the API response.
 //
 // Parameters:
@@ -327,22 +377,7 @@ func parseItems(jsonResponse models.DiningHallResponse, location, timeOfDay stri
 				TimeOfDay:   timeOfDay,
 				PortionSize: item.Portion,
 			}
-
-			// Extract nutrient information
-			if item.Nutrients != nil {
-				for _, nutrient := range item.Nutrients {
-					switch nutrient.Name {
-					case "Calories":
-						dailyItem.Calories = nutrient.Value
-					case "Protein (g)":
-						dailyItem.Protein = nutrient.Value
-					case "Total Carbohydrates (g)":
-						dailyItem.Carbs = nutrient.Value
-					case "Total Fat (g)":
-						dailyItem.Fat = nutrient.Value
-					}
-				}
-			}
+			populateDailyFromMenuItem(&dailyItem, item)
 
 			dailyItems = append(dailyItems, dailyItem)
 			allDataItems = append(allDataItems, allDataItem)

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertTriangle } from 'lucide-react'
-import FeedbackButton from './feedback-button'
+// import FeedbackButton from './feedback-button'
 
 interface ErrorPopupProps {
   isOpen: boolean;
@@ -19,11 +19,11 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ isOpen, onClose }) => {
           </DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          We're having trouble loading the menu items. This could be due to a temporary issue with our data source. Please try again later or contact support if the problem persists.
+          We&apos;re having trouble loading the menu items. This could be due to a temporary issue with our data source. Please try again later.
         </DialogDescription>
-        <div className="mt-4 flex justify-center">
+        {/* <div className="mt-4 flex justify-center">
           <FeedbackButton />
-        </div>
+        </div> */}
       </DialogContent>
     </Dialog>
   );

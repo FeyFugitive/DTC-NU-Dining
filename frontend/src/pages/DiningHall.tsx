@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthProvider";
 import AuthPopup from "@/components/AuthPopup";
 import type { DailyItem } from "@/types/ItemTypes";
 import { postUserPreferences } from "@/util/data";
+import { foodItemQueryString } from "@/util/foodItemNav";
 
 export default function DiningHall() {
   const navigate = useNavigate();
@@ -152,7 +153,10 @@ export default function DiningHall() {
                   items={itemsByTimeOfDay}
                   availableFavorites={filteredAvailableFavorites}
                   handleItemClick={handleItemClick}
-                  expandFolders={true}
+                  onOpenItem={(item) =>
+                    navigate({ pathname: "/food", search: foodItemQueryString(item) }, { state: { item } })
+                  }
+                  expandFolders={false}
                 />
               </div>
             );
