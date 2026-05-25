@@ -122,7 +122,8 @@ func ScrapeUpdateWeekly(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// ScrapeWeeklyItemsHandler scrapes daily dining hall items for +- 3 days from current day
+// ScrapeWeeklyItemsHandler scrapes daily dining hall items for today and the next 3 calendar days
+// (4 dates total: offsets 0..3 from server local "now"). Past dates are not scraped.
 //
 // This handler expects no request body but requires no authorization for the request.
 // It responds with an HTTP status code indicating the result of the scraping operation.
@@ -141,8 +142,9 @@ func ScrapeWeeklyItemsHandler(w http.ResponseWriter, r *http.Request) {
 	var totalAllItems []models.AllDataItem
 
 	today := time.Now()
-	for scrapeInd := -3; scrapeInd <= 3; scrapeInd++ {
-		scrapeDate := today.AddDate(0, 0, scrapeInd).Format("2006-01-02")
+	const forwardDays = 3 // today + next 3 days (inclusive)
+	for dayOffset := 0; dayOffset <= forwardDays; dayOffset++ {
+		scrapeDate := today.AddDate(0, 0, dayOffset).Format("2006-01-02")
 
 		var dItems []models.DailyItem
 		var aItems []models.AllDataItem
@@ -171,7 +173,7 @@ func ScrapeWeeklyItemsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Successfully scraped date %s: %d daily items, %d all items\n", scrapeDate, len(dItems), len(aItems))
 
 		for _, dItem := range dItems {
-			weeklyItems = append(weeklyItems, models.WeeklyItem{DailyItem: dItem, DayIndex: scrapeInd})
+			weeklyItems = append(weeklyItems, models.WeeklyItem{DailyItem: dItem, DayIndex: dayOffset})
 		}
 
 		totalAllItems = append(totalAllItems, aItems...)

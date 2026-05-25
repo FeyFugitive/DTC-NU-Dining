@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { postDisplayPreferences, postUserPreferences } from "../util/data"
-import Fuse from "fuse.js"
 import LocationItemGrid from "../components/locationGrid"
 import { useAuth } from "../context/AuthProvider"
 import AuthPopup from "../components/AuthPopup"
@@ -17,6 +16,7 @@ import { HeaderControls } from "../components/header-controls"
 import SEO from "../components/SEO"
 import { HomeFilterChips } from "@/components/dining/HomeFilterChips"
 import { foodItemQueryString } from "@/util/foodItemNav"
+import { filterDailyItemsBySearch } from "@/util/menuSearch"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 
@@ -74,8 +74,6 @@ const DailyItems: React.FC = () => {
   }, [token, displayPreferences])
 
   const [searchQuery, setSearchQuery] = useState("")
-  const [filteredItems, setFilteredItems] = useState<DailyItem[]>([])
-  const fuse = useMemo(() => new Fuse(dailyItems, { keys: ["Name"], threshold: 0.5 }), [dailyItems])
 
   useEffect(() => {
     if (memoizedLocationHours && Object.keys(memoizedLocationHours).length > 0) {
@@ -110,14 +108,10 @@ const DailyItems: React.FC = () => {
     }
   }, [dailyItems, userPreferences])
 
-  useEffect(() => {
-    if (searchQuery) {
-      const result = fuse.search(searchQuery).map(({ item }) => item)
-      setFilteredItems(result)
-    } else {
-      setFilteredItems(dailyItems)
-    }
-  }, [searchQuery, dailyItems, fuse])
+  const filteredItems = useMemo(
+    () => filterDailyItemsBySearch(dailyItems, searchQuery),
+    [dailyItems, searchQuery],
+  )
 
   const displayedLocations = useMemo(() => {
     if (!filterOpenNow) {
@@ -203,7 +197,7 @@ const DailyItems: React.FC = () => {
   return (
     <div className="space-y-4 pb-4">
       <SEO
-        title="Campus Dining — Today's menus"
+        title="NU Eats — Today's menus"
         description="Decide where and what to eat at Northwestern. Live-style hall status, menus, and hours for residential dining."
         keywords="Northwestern dining, campus dining, NU dining hall menu, meal exchange"
         url="https://nufood.me/"

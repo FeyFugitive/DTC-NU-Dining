@@ -9,15 +9,15 @@ interface SEOProps {
   type?: string;
 }
 
-const DEFAULT_TITLE = "Campus Dining — Northwestern";
-const SITE_NAME = "Campus Dining";
-const DEFAULT_DESCRIPTION = "Decide where and what to eat at Northwestern. Menus, hall status, and hours for campus dining.";
+const DEFAULT_TITLE = "NU Eats — Northwestern";
+const SITE_NAME = "NU Eats";
+const DEFAULT_DESCRIPTION = "NU Eats — decide where and what to eat at Northwestern. Menus, hall status, and hours for campus dining.";
 const DEFAULT_IMAGE = "https://nufood.me/fork_knife.png";
 
 export default function SEO({
   title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
-  keywords = "Northwestern University, campus dining, dining halls, NU food, meal exchange",
+  keywords = "NU Eats, Northwestern University, campus dining, dining halls, meal exchange",
   image = DEFAULT_IMAGE,
   url = "https://nufood.me/",
   type = "website"

@@ -84,6 +84,10 @@ func main() {
 	apiRouter.HandleFunc("/sendMailing", middleware.AdminMiddleware(api.SendOutMailing)).Methods("GET", "OPTIONS")
 	apiRouter.HandleFunc("/unsubscribe", api.HandleUnsubscribe).Methods("GET", "OPTIONS")
 
+	apiRouter.HandleFunc("/foodPhotos", api.ListFoodPhotosHandler).Methods("GET", "OPTIONS")
+	apiRouter.HandleFunc("/foodPhotos", middleware.AuthMiddleware(api.UploadFoodPhotoHandler)).Methods("POST", "OPTIONS")
+	apiRouter.HandleFunc("/foodPhotos/{id:[0-9]+}/image", api.FoodPhotoImageHandler).Methods("GET", "OPTIONS")
+
 	// Nutrition Goals endpoints - combine both methods on the same route pattern
 	nutritionGoalsRoute := apiRouter.PathPrefix("/nutritionGoals").Subrouter()
 	nutritionGoalsRoute.HandleFunc("", middleware.AuthMiddleware(api.SaveNutritionGoalsHandler)).Methods("POST", "OPTIONS")

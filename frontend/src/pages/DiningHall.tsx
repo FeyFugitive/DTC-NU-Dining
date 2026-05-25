@@ -101,7 +101,7 @@ export default function DiningHall() {
   if (!locationName) {
     return (
       <div className="space-y-4 pb-4">
-        <SEO title="Campus Dining — Hall" />
+        <SEO title="NU Eats — Hall" />
         <button
           onClick={() => navigate(-1)}
           className="text-sm font-semibold text-primary hover:underline"
@@ -116,7 +116,7 @@ export default function DiningHall() {
   return (
     <div className="space-y-4 pb-4">
       <SEO
-        title={`Campus Dining — ${locationName}`}
+        title={`NU Eats — ${locationName}`}
         description="Live-style dining hall menu with stations by meal time."
         url={`https://nufood.me/hall/${encodeURIComponent(locationName)}`}
       />

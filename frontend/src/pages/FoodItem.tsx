@@ -5,7 +5,8 @@ import AuthPopup from "@/components/AuthPopup";
 import { useAuth } from "@/context/AuthProvider";
 import { useDataStore } from "@/store";
 import type { DailyItem } from "@/types/ItemTypes";
-import { findDailyItemByParams } from "@/util/foodItemNav";
+import { canonicalFoodItemKey, findDailyItemByParams } from "@/util/foodItemNav";
+import { FoodItemPhotos } from "@/components/FoodItemPhotos";
 import { postUserPreferences } from "@/util/data";
 
 function subtitle(item: DailyItem): string {
@@ -26,10 +27,15 @@ export default function FoodItem() {
   const setUserPreferences = useDataStore((s) => s.setUserPreferences);
 
   const stateItem = (location.state as { item?: DailyItem } | null)?.item;
+  /** Prefer the row from `weeklyItems` + URL params whenever possible so the dish identity (and Firestore photo doc id) matches after refresh; `location.state` alone can differ slightly from the pool row. */
   const item = useMemo(() => {
+    const fromParams = findDailyItemByParams(weeklyItems, searchParams);
+    if (fromParams) return fromParams;
     if (stateItem?.Name) return stateItem;
-    return findDailyItemByParams(weeklyItems, searchParams);
+    return undefined;
   }, [stateItem, weeklyItems, searchParams]);
+
+  const itemKey = item ? canonicalFoodItemKey(item) : "";
 
   const isFavorite = useMemo(() => {
     if (!userPreferences || !item) return false;
@@ -73,7 +79,7 @@ export default function FoodItem() {
   if (!item) {
     return (
       <div className="space-y-4 pb-6">
-        <SEO title="Campus Dining — Item" />
+        <SEO title="NU Eats — Item" />
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -90,7 +96,7 @@ export default function FoodItem() {
 
   return (
     <div className="mx-auto max-w-lg space-y-4 pb-10">
-      <SEO title={`Campus Dining — ${item.Name}`} />
+      <SEO title={`NU Eats — ${item.Name}`} />
 
       <div className="flex items-start justify-between gap-3">
         <button
@@ -165,17 +171,12 @@ export default function FoodItem() {
         )}
       </section>
 
-      <section className={cardClass}>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Photos</p>
-          <span className="rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground">
-            Upload — coming soon
-          </span>
-        </div>
-        <div className="flex aspect-video items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/30">
-          <span className="text-sm text-muted-foreground">No photos yet</span>
-        </div>
-      </section>
+      <FoodItemPhotos
+        key={itemKey || searchParams.toString()}
+        item={item}
+        searchParams={searchParams}
+        onNeedAuth={() => setShowPopup(true)}
+      />
 
       {showPopup && <AuthPopup isOpen={showPopup} onClose={() => setShowPopup(false)} />}
     </div>

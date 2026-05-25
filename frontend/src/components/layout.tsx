@@ -59,7 +59,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-[100dvh] flex-col bg-background">
         <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/95 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
           <Link to="/" className="text-sm font-bold tracking-tight text-foreground">
-            Campus Dining
+            NU Eats
           </Link>
           <div className="flex items-center gap-1">
             <Button

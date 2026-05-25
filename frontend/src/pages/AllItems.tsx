@@ -5,7 +5,7 @@
  * 
  * Features:
  * - Fetches all items and user preferences from the backend or general data if unauthenticated.
- * - Implements a search functionality using Fuse.js for fuzzy searching.
+ * - Search filters all dish names by substring tokens (precise, predictable results).
  * - Provides pagination for navigating large datasets.
  * - Allows users to favorite or unfavorite items, with preferences saved to the backend.
  * - Displays an authentication popup if an unauthenticated user tries to favorite an item.
@@ -13,12 +13,11 @@
  * Key Components:
  * - `fetchAllData`, `fetchGeneralData`: Fetch data based on authentication state.
  * - `postUserPreferences`: Updates user preferences in the backend.
- * - `Fuse`: Fuzzy search library for filtering items.
+ * - Search: token-wise substring match on names, with strict fuzzy fallback for typos.
  * 
  */
 
 import React, { useState, useEffect } from 'react';
-import Fuse from 'fuse.js';
 import { Input } from '@headlessui/react';
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -38,6 +37,7 @@ import { useDataStore } from '@/store';
 import { postUserPreferences } from '@/util/data';
 import { useBanner } from '@/context/BannerContext';
 import SEO from '../components/SEO';
+import { filterItemsByNameOnly } from '@/util/menuSearch';
 
 const ITEMS_PER_PAGE = 100;
 
@@ -58,14 +58,9 @@ const AllItems: React.FC = () => {
 
   const { token } = useAuth();
 
-  const fuse = new Fuse(allItems, {
-    keys: ['Name'],
-    threshold: 0.5,
-  });
-
   useEffect(() => {
-    if (searchQuery) {
-      const result = fuse.search(searchQuery).map(({ item }) => item);
+    if (searchQuery.trim()) {
+      const result = filterItemsByNameOnly(allItems, searchQuery);
       setFilteredItems(result);
       setCurrentPage(1);
     } else {

@@ -83,6 +83,8 @@ curl -i http://localhost:8081/api/scrapeWeeklyItems
 curl -i http://localhost:8081/api/scrapeOperatingTimes
 ```
 
+`scrapeWeeklyItems` loads **today and the next 3 calendar days** (no past days), for a shorter scrape than a full week.
+
 Sanity check:
 
 ```bash
@@ -109,7 +111,45 @@ VITE_FIREBASE_MEASUREMENT_ID=...
 
 Notes:
 - Firebase vars are required for Google sign-in.
-- If omitted, app still runs but auth is disabled.
+- **`VITE_FIREBASE_STORAGE_BUCKET`** is required for **dish photos** on the food detail page (Firebase Storage).
+- If Firebase env is omitted, the app still runs but auth and photo uploads are disabled.
+
+### Dish photos (Firebase)
+
+Photos are stored in **Cloud Storage**; metadata (download URLs) is stored in **Firestore** under collection `menuItemPhotos` (one document per dish slot, `photos` array field).
+
+1. In Firebase Console: enable **Storage**, use the default bucket (or note the bucket name for `VITE_FIREBASE_STORAGE_BUCKET`).
+2. **Firestore rules** (dev-friendly; tighten for production):
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /menuItemPhotos/{docId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+    }
+  }
+}
+```
+
+3. **Storage rules** (example):
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /menuItemPhotos/{docId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
+
+Signed-in users can upload from the food page; everyone can read photos and the Firestore doc.
 
 Start frontend:
 
@@ -153,6 +193,9 @@ For Railway/backend containers, ensure Chromium runtime support is present for s
   - verify Google provider is enabled
   - verify `localhost` is in Firebase Authorized Domains
   - verify all `VITE_FIREBASE_*` vars exist and frontend was restarted
+- Photo upload fails or photos never load
+  - enable Storage + Firestore and apply the rules in **Dish photos (Firebase)** above
+  - confirm `VITE_FIREBASE_STORAGE_BUCKET` matches your bucket
 - `go: command not found`
   - install Go and reopen terminal
 
