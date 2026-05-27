@@ -14,7 +14,6 @@ import ErrorPopup from "../components/error-popup"
 import { useDataStore } from "@/store"
 import { HeaderControls } from "../components/header-controls"
 import SEO from "../components/SEO"
-import { HomeFilterChips } from "@/components/dining/HomeFilterChips"
 import { foodItemQueryString } from "@/util/foodItemNav"
 import { filterDailyItemsBySearch } from "@/util/menuSearch"
 import { Input } from "@/components/ui/input"
@@ -37,11 +36,9 @@ const DailyItems: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [openLocations, setOpenLocations] = useState<string[]>([])
   const [showErrorPopup, setShowErrorPopup] = useState(false)
-  const [filterOpenNow, setFilterOpenNow] = useState(false)
   const hasHydratedSignedInDisplayPrefs = useRef(false)
 
   const staticData = useDataStore((state) => state.UserDataResponse)
-  const menuDataUpdatedAt = useDataStore((state) => state.menuDataUpdatedAt)
   const weeklyItems = staticData.weeklyItems
   const memoizedLocationHours = useMemo(
     () => getDailyLocationOperationTimes(staticData.locationOperationHours, selectedDate),
@@ -114,11 +111,8 @@ const DailyItems: React.FC = () => {
   )
 
   const displayedLocations = useMemo(() => {
-    if (!filterOpenNow) {
-      return visibleLocations
-    }
-    return visibleLocations.filter((loc) => openLocations.includes(loc))
-  }, [visibleLocations, filterOpenNow, openLocations])
+    return visibleLocations
+  }, [visibleLocations])
 
   const handleItemClick = (item: Item) => {
     if (!token) {
@@ -190,10 +184,6 @@ const DailyItems: React.FC = () => {
     }
   }
 
-  const updatedLabel = menuDataUpdatedAt
-    ? new Date(menuDataUpdatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
-    : null
-
   return (
     <div className="space-y-3 pb-2 sm:space-y-4">
       <SEO
@@ -223,12 +213,6 @@ const DailyItems: React.FC = () => {
         openLocations={openLocations}
       />
 
-      {updatedLabel && (
-        <p className="text-xs text-muted-foreground">
-          Menu data last synced: <span className="font-medium text-foreground">{updatedLabel}</span>
-        </p>
-      )}
-
       <div className="relative">
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -242,10 +226,6 @@ const DailyItems: React.FC = () => {
           className="h-11 rounded-xl border-border bg-card pl-10 shadow-sm"
         />
       </div>
-
-      <section aria-label="Filters">
-        <HomeFilterChips activeOpenNow={filterOpenNow} onOpenNowChange={setFilterOpenNow} />
-      </section>
 
       <div>
         <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">

@@ -1,38 +1,11 @@
 import * as React from "react";
 import type { Hour } from "@/types/OperationTypes";
 import { useOperatingStatus } from "@/hooks/useOperatingStatus";
-import type { CrowdLevel, DiningHallMeta, RelativeBusyness } from "@/lib/diningHallMeta";
+import type { DiningHallMeta, RelativeBusyness } from "@/lib/diningHallMeta";
 import { getDiningHallMeta, relativeBusynessLabel } from "@/lib/diningHallMeta";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
 import { Link } from "react-router-dom";
-
-function crowdBadgeClasses(level: CrowdLevel): string {
-  switch (level) {
-    case "low":
-      return "border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200";
-    case "moderate":
-      return "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-100";
-    case "busy":
-      return "border-red-500/40 bg-red-500/10 text-red-900 dark:text-red-100";
-    default:
-      return "border-border bg-muted/60 text-muted-foreground";
-  }
-}
-
-function crowdLabel(level: CrowdLevel): string {
-  switch (level) {
-    case "low":
-      return "Not too busy";
-    case "moderate":
-      return "A little busy";
-    case "busy":
-      return "Busy";
-    default:
-      return "—";
-  }
-}
 
 function relativeBusynessBadgeClasses(level: RelativeBusyness): string {
   switch (level) {
@@ -77,6 +50,9 @@ export function DiningHallHomeCard({
     { key: "credit", label: "Credit" },
   ];
 
+  const showRelativeBusyness = isOpen && !isInvalid && meta.relativeBusyness !== "unknown";
+  const showHoursBadge = isInvalid;
+
   return (
     <article
       className={cn(
@@ -88,34 +64,28 @@ export function DiningHallHomeCard({
       )}
     >
       <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-3 py-2.5 sm:px-4">
-        <Badge
-          className={cn(
-            "shrink-0 border font-semibold tracking-tight",
-            isInvalid
-              ? "border-amber-500/50 bg-amber-500/15 text-amber-900 dark:text-amber-100"
-              : isOpen
-                ? "border-emerald-500/45 bg-emerald-500/12 text-emerald-900 dark:text-emerald-100"
-                : "border-border bg-muted text-muted-foreground"
-          )}
-        >
-          {isInvalid ? "Hours unknown" : isOpen ? "Open" : "Closed"}
-        </Badge>
-        <Badge
-          variant="outline"
-          className={cn("shrink-0 gap-1 border font-medium", crowdBadgeClasses(meta.crowdLevel))}
-        >
-          <Users className="h-3 w-3 opacity-80" aria-hidden />
-          Crowd: {crowdLabel(meta.crowdLevel)}
-        </Badge>
-        <Badge
-          variant="outline"
-          className={cn(
-            "min-w-0 max-w-full shrink font-medium",
-            relativeBusynessBadgeClasses(meta.relativeBusyness)
-          )}
-        >
-          <span className="truncate">{relativeBusynessLabel(meta.relativeBusyness)}</span>
-        </Badge>
+        {showHoursBadge && (
+          <Badge
+            className={cn(
+              "shrink-0 border font-semibold tracking-tight",
+              "border-amber-500/50 bg-amber-500/15 text-amber-900 dark:text-amber-100"
+            )}
+          >
+            Hours unknown
+          </Badge>
+        )}
+        {/* Only show "busy" indicators when the hall is open. */}
+        {showRelativeBusyness && (
+          <Badge
+            variant="outline"
+            className={cn(
+              "min-w-0 max-w-full shrink font-medium",
+              relativeBusynessBadgeClasses(meta.relativeBusyness)
+            )}
+          >
+            <span className="truncate">{relativeBusynessLabel(meta.relativeBusyness)}</span>
+          </Badge>
+        )}
       </div>
 
       <div className="px-3 py-3 sm:px-4 sm:py-3.5">
