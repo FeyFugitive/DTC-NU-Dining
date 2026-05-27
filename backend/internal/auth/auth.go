@@ -110,7 +110,9 @@ func validateServiceAccountJSON(data []byte) error {
 // writeCredentialsFromEnv builds firebase_keys.json on Railway/production.
 // Prefer FIREBASE_SERVICE_ACCOUNT_JSON (entire JSON file, one variable) over split FIREBASE_* vars.
 func writeCredentialsFromEnv(filename string) error {
-	if saJSON := strings.TrimSpace(os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")); saJSON != "" {
+	saJSON := strings.TrimSpace(os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON"))
+
+	if saJSON != "" {
 		data := []byte(saJSON)
 		if err := validateServiceAccountJSON(data); err != nil {
 			return fmt.Errorf("FIREBASE_SERVICE_ACCOUNT_JSON: %w", err)
@@ -122,21 +124,25 @@ func writeCredentialsFromEnv(filename string) error {
 		return nil
 	}
 
-	if !IsRailway() && os.Getenv("FIREBASE_PROJECT_ID") == "" {
-		return nil
+	// On Railway, only accept the single JSON variable — ignore stale split FIREBASE_* vars.
+	if IsRailway() {
+		hint := ""
+		if strings.Contains(os.Getenv("FIREBASE_PRIVATE_KEY"), "PASTE_PRIVATE_KEY") {
+			hint = " Delete FIREBASE_PRIVATE_KEY (and other FIREBASE_* split vars) from this service and from Project → Shared Variables."
+		}
+		return fmt.Errorf(
+			"FIREBASE_SERVICE_ACCOUNT_JSON is empty in this deploy.%s Add it on the DTC-NU-Dining service → Variables, then Redeploy",
+			hint,
+		)
 	}
 
 	if os.Getenv("FIREBASE_PROJECT_ID") == "" {
-		return fmt.Errorf(
-			"on Railway set FIREBASE_SERVICE_ACCOUNT_JSON (paste full firebase_keys.json) or FIREBASE_* vars",
-		)
+		return nil
 	}
 
 	pk := os.Getenv("FIREBASE_PRIVATE_KEY")
 	if strings.Contains(pk, "PASTE_PRIVATE_KEY") {
-		return fmt.Errorf(
-			"FIREBASE_PRIVATE_KEY is still the placeholder — use FIREBASE_SERVICE_ACCOUNT_JSON instead (paste full JSON)",
-		)
+		return fmt.Errorf("FIREBASE_PRIVATE_KEY is still a placeholder — set FIREBASE_SERVICE_ACCOUNT_JSON instead")
 	}
 
 	return CreateFirebaseConfig(filename)
