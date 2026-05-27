@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -34,7 +35,11 @@ func main() {
 	if POSTGRES_URL == "" {
 		log.Fatal("POSTGRES_URL environment variable is not set")
 	}
+	if strings.Contains(POSTGRES_URL, "${{") {
+		log.Fatal("POSTGRES_URL still contains unresolved ${{...}} — set it to the Postgres DATABASE_URL (copy from the Postgres service Variables tab)")
+	}
 
+	log.Println("Connecting to PostgreSQL...")
 	err := db.InitDB(POSTGRES_URL)
 
 	if err != nil {
