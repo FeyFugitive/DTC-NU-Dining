@@ -192,7 +192,8 @@ Required service variables:
 
 - `POSTGRES_URL` — Railway Postgres connection string
 - `RAILWAY=true` — use env-based Firebase config (see `backend/internal/auth/auth.go`)
-- `FIREBASE_*` — service account fields for Railway (same values as `firebase_keys.json`)
+- `FIREBASE_SERVICE_ACCOUNT_JSON` — **recommended on Railway:** paste the entire `firebase_keys.json` as one line (minify with `jq -c . backend/firebase_keys.json`)
+- Or individual `FIREBASE_*` fields (same values as `firebase_keys.json`; avoid multiline `FIREBASE_PRIVATE_KEY` in Raw Editor)
 - `ADMIN_TOKEN` — for admin scrape routes (optional locally)
 
 After first deploy, seed data:

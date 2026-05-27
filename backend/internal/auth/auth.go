@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+const credentialsFile = "firebase_keys.json"
+
 var firebaseAuth *auth.Client
 
 // IsRailway reports whether the process is running on Railway (injected env or explicit flag).
@@ -92,6 +94,54 @@ func CreateFirebaseConfig(filename string) error {
 	return nil
 }
 
+func validateServiceAccountJSON(data []byte) error {
+	var probe struct {
+		PrivateKey string `json:"private_key"`
+	}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return fmt.Errorf("invalid JSON: %w", err)
+	}
+	if probe.PrivateKey == "" || strings.Contains(probe.PrivateKey, "PASTE_PRIVATE_KEY") {
+		return fmt.Errorf("private_key is missing or still a placeholder — paste the full firebase_keys.json")
+	}
+	return nil
+}
+
+// writeCredentialsFromEnv builds firebase_keys.json on Railway/production.
+// Prefer FIREBASE_SERVICE_ACCOUNT_JSON (entire JSON file, one variable) over split FIREBASE_* vars.
+func writeCredentialsFromEnv(filename string) error {
+	if saJSON := strings.TrimSpace(os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")); saJSON != "" {
+		data := []byte(saJSON)
+		if err := validateServiceAccountJSON(data); err != nil {
+			return fmt.Errorf("FIREBASE_SERVICE_ACCOUNT_JSON: %w", err)
+		}
+		if err := os.WriteFile(filename, data, 0644); err != nil {
+			return fmt.Errorf("writing credentials file: %w", err)
+		}
+		log.Printf("Firebase credentials written from FIREBASE_SERVICE_ACCOUNT_JSON to %s", filename)
+		return nil
+	}
+
+	if !IsRailway() && os.Getenv("FIREBASE_PROJECT_ID") == "" {
+		return nil
+	}
+
+	if os.Getenv("FIREBASE_PROJECT_ID") == "" {
+		return fmt.Errorf(
+			"on Railway set FIREBASE_SERVICE_ACCOUNT_JSON (paste full firebase_keys.json) or FIREBASE_* vars",
+		)
+	}
+
+	pk := os.Getenv("FIREBASE_PRIVATE_KEY")
+	if strings.Contains(pk, "PASTE_PRIVATE_KEY") {
+		return fmt.Errorf(
+			"FIREBASE_PRIVATE_KEY is still the placeholder — use FIREBASE_SERVICE_ACCOUNT_JSON instead (paste full JSON)",
+		)
+	}
+
+	return CreateFirebaseConfig(filename)
+}
+
 // InitFirebase initializes the Firebase SDK with credentials from a file.
 //
 // This function loads Firebase credentials from the environment or a specified file.
@@ -104,22 +154,11 @@ func CreateFirebaseConfig(filename string) error {
 // Returns:
 //   - error: Returns an error if the Firebase app initialization fails, otherwise nil.
 func InitFirebase() error {
-	// Replace this with the relative path to your key file
-	credentials := "firebase_keys.json"
-
-	if IsRailway() {
-		if os.Getenv("FIREBASE_PROJECT_ID") == "" {
-			return fmt.Errorf(
-				"running on Railway: set FIREBASE_* env vars (from firebase_keys.json) in the service Variables tab",
-			)
-		}
-		err := CreateFirebaseConfig(credentials)
-		if err != nil {
-			return fmt.Errorf("error creating Firebase config: %v", err)
-		}
+	if err := writeCredentialsFromEnv(credentialsFile); err != nil {
+		return fmt.Errorf("error creating Firebase config: %w", err)
 	}
 
-	opt := option.WithCredentialsFile(credentials)
+	opt := option.WithCredentialsFile(credentialsFile)
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		return fmt.Errorf("error initializing Firebase app: %v", err)
