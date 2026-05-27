@@ -15,6 +15,11 @@ import (
 
 var firebaseAuth *auth.Client
 
+// IsRailway reports whether the process is running on Railway (injected env or explicit flag).
+func IsRailway() bool {
+	return os.Getenv("RAILWAY") == "true" || os.Getenv("RAILWAY_ENVIRONMENT") != ""
+}
+
 // FirebaseConfig represents the structure of the Firebase configuration JSON.
 //
 // This struct is used to define the structure of the configuration required to initialize Firebase.
@@ -61,7 +66,7 @@ func CreateFirebaseConfig(filename string) error {
 		Type:                    os.Getenv("FIREBASE_TYPE"),
 		ProjectID:               os.Getenv("FIREBASE_PROJECT_ID"),
 		PrivateKeyID:            os.Getenv("FIREBASE_PRIVATE_KEY_ID"),
-		PrivateKey:              os.Getenv("FIREBASE_PRIVATE_KEY"),
+		PrivateKey:              strings.ReplaceAll(os.Getenv("FIREBASE_PRIVATE_KEY"), `\n`, "\n"),
 		ClientEmail:             os.Getenv("FIREBASE_CLIENT_EMAIL"),
 		ClientID:                os.Getenv("FIREBASE_CLIENT_ID"),
 		AuthURI:                 os.Getenv("FIREBASE_AUTH_URI"),
@@ -102,7 +107,12 @@ func InitFirebase() error {
 	// Replace this with the relative path to your key file
 	credentials := "firebase_keys.json"
 
-	if os.Getenv("RAILWAY") == "true" {
+	if IsRailway() {
+		if os.Getenv("FIREBASE_PROJECT_ID") == "" {
+			return fmt.Errorf(
+				"running on Railway: set FIREBASE_* env vars (from firebase_keys.json) in the service Variables tab",
+			)
+		}
 		err := CreateFirebaseConfig(credentials)
 		if err != nil {
 			return fmt.Errorf("error creating Firebase config: %v", err)

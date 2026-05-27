@@ -19,7 +19,7 @@ import (
 
 func main() {
 	// Load .env file only if not in production
-	if os.Getenv("RENDER") != "true" && os.Getenv("RAILWAY") != "true" {
+	if os.Getenv("RENDER") != "true" && !auth.IsRailway() {
 		env_err := godotenv.Load()
 		if env_err != nil {
 			log.Printf("Error loading .env file: %v", env_err)
