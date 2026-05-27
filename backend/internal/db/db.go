@@ -2,6 +2,7 @@ package db
 
 import (
 	"backend/internal/models"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -94,13 +95,38 @@ func WeeklyItemToGorm(item models.WeeklyItem) GormWeeklyItem {
 //
 // Returns:
 // - error: An error if the database connection or migration fails.
+func normalizePostgresURL(databasePath string) string {
+	// Railway private network URLs use *.railway.internal — SSL is not used there.
+	if strings.Contains(databasePath, "railway.internal") && !strings.Contains(databasePath, "sslmode=") {
+		if strings.Contains(databasePath, "?") {
+			return databasePath + "&sslmode=disable"
+		}
+		return databasePath + "?sslmode=disable"
+	}
+	return databasePath
+}
+
 func InitDB(databasePath string) error {
+	databasePath = normalizePostgresURL(databasePath)
+
 	var err error
 
 	DB, err = gorm.Open(postgres.Open(databasePath), &gorm.Config{})
 	if err != nil {
 		return err
 	}
+
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return fmt.Errorf("postgres ping failed (check POSTGRES_URL and that Postgres service is running): %w", err)
+	}
+	log.Println("PostgreSQL connection OK")
 
 	// Auto migrate the schemas
 	err = DB.AutoMigrate(&GormAllDataItem{}, &GormUserPreferences{}, &GormLocationOperatingTimes{}, &GormWeeklyItem{}, &GormNutritionGoals{})
