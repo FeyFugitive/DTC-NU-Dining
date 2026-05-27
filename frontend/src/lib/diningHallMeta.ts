@@ -13,6 +13,14 @@ function hallThumbnailDataUri(label: string): string {
 
 export type CrowdLevel = "low" | "moderate" | "busy" | "unknown";
 
+/** Relative line/busyness vs this hall's typical peak (placeholder until live data). */
+export type RelativeBusyness =
+  | "quieter_than_usual"
+  | "about_usual"
+  | "busier_than_usual"
+  | "much_busier_than_usual"
+  | "unknown";
+
 export interface DiningHallPayments {
   mealExchange: boolean;
   diningDollars: boolean;
@@ -22,56 +30,51 @@ export interface DiningHallPayments {
 export interface DiningHallMeta {
   subtitle: string;
   thumbnailSrc: string;
-  walkMinutesFromNorris: number;
-  typicalWaitMinutes: number | null;
+  /** How busy lines feel vs this location's usual (Google Maps–style, not minutes). */
+  relativeBusyness: RelativeBusyness;
   crowdLevel: CrowdLevel;
   payments: DiningHallPayments;
 }
 
 const defaultPayments: DiningHallPayments = {
-  mealExchange: true,
-  diningDollars: true,
-  credit: true,
+  mealExchange: false,
+  diningDollars: false,
+  credit: false,
 };
 
 export const DINING_HALL_META: Record<string, DiningHallMeta> = {
   Sargent: {
     subtitle: "Residential · South Campus",
     thumbnailSrc: hallThumbnailDataUri("Sargent"),
-    walkMinutesFromNorris: 7,
-    typicalWaitMinutes: 8,
+    relativeBusyness: "about_usual",
     crowdLevel: "moderate",
     payments: defaultPayments,
   },
   Elder: {
     subtitle: "Residential · North Campus",
     thumbnailSrc: hallThumbnailDataUri("Elder"),
-    walkMinutesFromNorris: 9,
-    typicalWaitMinutes: 6,
+    relativeBusyness: "quieter_than_usual",
     crowdLevel: "low",
     payments: defaultPayments,
   },
   Allison: {
     subtitle: "Residential · East Campus",
     thumbnailSrc: hallThumbnailDataUri("Allison"),
-    walkMinutesFromNorris: 6,
-    typicalWaitMinutes: 10,
+    relativeBusyness: "about_usual",
     crowdLevel: "moderate",
     payments: defaultPayments,
   },
   "Plex East": {
     subtitle: "Residential · East Fairchild",
     thumbnailSrc: hallThumbnailDataUri("Plex East"),
-    walkMinutesFromNorris: 5,
-    typicalWaitMinutes: 12,
+    relativeBusyness: "much_busier_than_usual",
     crowdLevel: "busy",
     payments: defaultPayments,
   },
   "Plex West": {
     subtitle: "Residential · West Fairchild",
     thumbnailSrc: hallThumbnailDataUri("Plex West"),
-    walkMinutesFromNorris: 5,
-    typicalWaitMinutes: 11,
+    relativeBusyness: "busier_than_usual",
     crowdLevel: "busy",
     payments: defaultPayments,
   },
@@ -82,10 +85,24 @@ export function getDiningHallMeta(locationName: string): DiningHallMeta {
     DINING_HALL_META[locationName] ?? {
       subtitle: "Campus dining",
       thumbnailSrc: hallThumbnailDataUri(locationName),
-      walkMinutesFromNorris: 8,
-      typicalWaitMinutes: null,
+      relativeBusyness: "unknown",
       crowdLevel: "unknown",
       payments: defaultPayments,
     }
   );
+}
+
+export function relativeBusynessLabel(level: RelativeBusyness): string {
+  switch (level) {
+    case "quieter_than_usual":
+      return "Quieter than usual";
+    case "about_usual":
+      return "About as busy as usual";
+    case "busier_than_usual":
+      return "Busier than usual";
+    case "much_busier_than_usual":
+      return "Much busier than usual";
+    default:
+      return "Not enough data yet";
+  }
 }

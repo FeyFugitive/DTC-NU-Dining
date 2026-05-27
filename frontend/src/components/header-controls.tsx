@@ -38,7 +38,7 @@ export function HeaderControls({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Today
           </p>
-          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
             {format(selectedDate, "EEEE, MMM d")}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">

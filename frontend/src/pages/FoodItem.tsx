@@ -95,7 +95,7 @@ export default function FoodItem() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-4 pb-10">
+    <div className="space-y-4 pb-4">
       <SEO title={`NU Eats — ${item.Name}`} />
 
       <div className="flex items-start justify-between gap-3">

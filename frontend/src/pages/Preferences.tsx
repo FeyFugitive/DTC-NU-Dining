@@ -57,7 +57,7 @@ export default function Preferences() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-3 pb-28 pt-2 text-foreground sm:px-4">
+    <div className="space-y-4 pb-4 text-foreground">
       <SEO
         title="Favorites & saved items"
         description="Manage your favorite Northwestern University dining items."

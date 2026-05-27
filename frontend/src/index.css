@@ -75,11 +75,38 @@
   }
 }
 @layer base {
+  :root {
+    /* iPhone-class 19.5:9 viewport — logical width cap for the app column */
+    --app-max-width: 430px;
+    --app-gutter: max(0.75rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+    --app-tab-bar-height: 3.25rem;
+  }
+
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  #root {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+}
+
+@layer utilities {
+  .app-px {
+    padding-left: var(--app-gutter);
+    padding-right: var(--app-gutter);
   }
 }
 

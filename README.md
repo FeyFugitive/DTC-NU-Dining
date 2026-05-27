@@ -181,6 +181,29 @@ When coming back to work:
 - Backend: Railway
 - Database: Railway Postgres
 
+### Railway (backend)
+
+This repo is a monorepo: the API Dockerfile is at `backend/Dockerfile`. Either:
+
+1. Use the root `railway.toml` (points Railway at that Dockerfile), **or**
+2. In the Railway service → **Settings → Root Directory** → set `backend`
+
+Required service variables:
+
+- `POSTGRES_URL` — Railway Postgres connection string
+- `RAILWAY=true` — use env-based Firebase config (see `backend/internal/auth/auth.go`)
+- `FIREBASE_*` — service account fields for Railway (same values as `firebase_keys.json`)
+- `ADMIN_TOKEN` — for admin scrape routes (optional locally)
+
+After first deploy, seed data:
+
+```bash
+curl -i https://YOUR-RAILWAY-DOMAIN/api/scrapeWeeklyItems
+curl -i https://YOUR-RAILWAY-DOMAIN/api/scrapeOperatingTimes
+```
+
+The server listens on Railway’s `PORT` (falls back to `8081` locally).
+
 For Railway/backend containers, ensure Chromium runtime support is present for scraper jobs and `CHROME_BIN` is configured when needed.
 
 ## Troubleshooting

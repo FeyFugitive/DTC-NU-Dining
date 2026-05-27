@@ -102,9 +102,15 @@ func main() {
 	// Apply CORS middleware to all routes
 	corsRouter := middleware.CorsMiddleware(r)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
+	}
+	addr := ":" + port
+
 	// Set up server with timeouts
 	server := &http.Server{
-		Addr:         ":8081",
+		Addr:         addr,
 		Handler:      corsRouter,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -112,6 +118,6 @@ func main() {
 	}
 
 	// Start the server
-	fmt.Println("Server starting on port 8081")
+	fmt.Printf("Server starting on port %s\n", port)
 	log.Fatal(server.ListenAndServe())
 }

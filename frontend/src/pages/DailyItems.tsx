@@ -195,7 +195,7 @@ const DailyItems: React.FC = () => {
     : null
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-3 pb-2 sm:space-y-4">
       <SEO
         title="NU Eats — Today's menus"
         description="Decide where and what to eat at Northwestern. Live-style hall status, menus, and hours for residential dining."

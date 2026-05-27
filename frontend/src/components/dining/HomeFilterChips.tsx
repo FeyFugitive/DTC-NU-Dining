@@ -6,7 +6,7 @@ const FILTERS: { id: HomeFilterId; label: string; soon?: boolean }[] = [
   { id: "openNow", label: "Open now" },
   { id: "nearby", label: "Nearby", soon: true },
   { id: "mealExchange", label: "Meal Exchange", soon: true },
-  { id: "lowWait", label: "Low wait", soon: true },
+  { id: "lowWait", label: "Quieter than usual", soon: true },
 ];
 
 interface HomeFilterChipsProps {

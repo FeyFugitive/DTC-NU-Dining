@@ -1,8 +1,8 @@
 import * as React from "react";
 import type { Hour } from "@/types/OperationTypes";
 import { useOperatingStatus } from "@/hooks/useOperatingStatus";
-import type { CrowdLevel, DiningHallMeta } from "@/lib/diningHallMeta";
-import { getDiningHallMeta } from "@/lib/diningHallMeta";
+import type { CrowdLevel, DiningHallMeta, RelativeBusyness } from "@/lib/diningHallMeta";
+import { getDiningHallMeta, relativeBusynessLabel } from "@/lib/diningHallMeta";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
@@ -24,13 +24,28 @@ function crowdBadgeClasses(level: CrowdLevel): string {
 function crowdLabel(level: CrowdLevel): string {
   switch (level) {
     case "low":
-      return "Light";
+      return "Not too busy";
     case "moderate":
-      return "Moderate";
+      return "A little busy";
     case "busy":
       return "Busy";
     default:
       return "—";
+  }
+}
+
+function relativeBusynessBadgeClasses(level: RelativeBusyness): string {
+  switch (level) {
+    case "quieter_than_usual":
+      return "border-emerald-500/35 bg-emerald-500/8 text-emerald-900 dark:text-emerald-100";
+    case "about_usual":
+      return "border-border bg-muted/50 text-foreground";
+    case "busier_than_usual":
+      return "border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100";
+    case "much_busier_than_usual":
+      return "border-red-500/40 bg-red-500/10 text-red-950 dark:text-red-100";
+    default:
+      return "border-border bg-muted/40 text-muted-foreground";
   }
 }
 
@@ -92,27 +107,19 @@ export function DiningHallHomeCard({
           <Users className="h-3 w-3 opacity-80" aria-hidden />
           Crowd: {crowdLabel(meta.crowdLevel)}
         </Badge>
-        <span className="min-w-0 text-xs font-medium text-foreground sm:text-sm">
-          <span className="text-muted-foreground">Est. wait: </span>
-          {meta.typicalWaitMinutes != null ? (
-            <span className="tabular-nums">~{meta.typicalWaitMinutes} min</span>
-          ) : (
-            <span className="text-muted-foreground">not tracked live</span>
+        <Badge
+          variant="outline"
+          className={cn(
+            "min-w-0 max-w-full shrink font-medium",
+            relativeBusynessBadgeClasses(meta.relativeBusyness)
           )}
-        </span>
+        >
+          <span className="truncate">{relativeBusynessLabel(meta.relativeBusyness)}</span>
+        </Badge>
       </div>
 
       <div className="px-3 py-3 sm:px-4 sm:py-3.5">
-        <div className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Walk: </span>
-          <span className="tabular-nums">~{meta.walkMinutesFromNorris} min</span>
-          <span> from Norris</span>
-        </div>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Walk time is distance; est. wait is time in line (placeholder until live crowd data).
-        </p>
-
-        <div className="mt-3 flex gap-3">
+        <div className="flex gap-3">
           {hallHref ? (
             <Link to={hallHref} className="flex flex-1 items-start gap-3 no-underline hover:opacity-95">
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border/70 bg-muted shadow-inner">

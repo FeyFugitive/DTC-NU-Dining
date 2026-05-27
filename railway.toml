@@ -1,0 +1,12 @@
+# Monorepo: Go API lives in /backend (Dockerfile is not at repo root).
+# See https://docs.railway.com/deployments/monorepo
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "backend/Dockerfile"
+watchPatterns = ["backend/**"]
+
+[deploy]
+healthcheckPath = "/api/generalData"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"

@@ -7,6 +7,17 @@ export default {
         ],
         theme: {
                 extend: {
+                        maxWidth: {
+                                /** ~iPhone 14/15 Pro logical width; 19.5:9 phone column */
+                                phone: '430px',
+                        },
+                        minHeight: {
+                                /** Dynamic viewport height for mobile browsers */
+                                screen: '100dvh',
+                        },
+                        height: {
+                                screen: '100dvh',
+                        },
                         boxShadow: {
                                 'lg-dark': '0 4px 6px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.5)', // Custom shadow for dark mode
                         },
