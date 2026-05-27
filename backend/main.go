@@ -119,12 +119,12 @@ func main() {
 	}
 	addr := ":" + port
 
-	// Set up server with timeouts
+	// Scrape routes can run headless Chrome for several minutes.
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      corsRouter,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 20 * time.Minute,
 		IdleTimeout:  60 * time.Second,
 	}
 
