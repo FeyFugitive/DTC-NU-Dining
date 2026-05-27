@@ -25,6 +25,28 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+func isAllowedOrigin(origin string) bool {
+	if origin == "" {
+		return false
+	}
+	// Comma-separated list on Railway, e.g. https://nueats.vercel.app,https://www.nueats.com
+	if extra := os.Getenv("CORS_ALLOWED_ORIGINS"); extra != "" {
+		for _, o := range strings.Split(extra, ",") {
+			if strings.TrimSpace(o) == origin {
+				return true
+			}
+		}
+	}
+	if origin == "http://localhost:5173" || origin == "https://www.nufood.me" || origin == "https://www.dineon.nu" {
+		return true
+	}
+	// Vercel production + preview deploys
+	if strings.HasSuffix(origin, ".vercel.app") && strings.HasPrefix(origin, "https://") {
+		return true
+	}
+	return false
+}
+
 // SendJSONError sends a consistent JSON error response
 func SendJSONError(w http.ResponseWriter, message string, status int) {
 	response := ErrorResponse{
@@ -43,7 +65,7 @@ func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		fmt.Println("Origin: ", origin)
-		if origin == "http://localhost:5173" || origin == "https://www.nufood.me" || origin == "https://www.dineon.nu" {
+		if isAllowedOrigin(origin) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
